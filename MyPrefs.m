@@ -16,7 +16,7 @@
         rect.size.height -= 48;
 
 	_username = [[UIPreferencesTextTableCell alloc] init];
-	[_username setTitle:@"ID"];
+	[_username setTitle:@"Username"];
 	[_username setValue:@""];
 	[[_username textField] setAutoCapsType:0];
 
