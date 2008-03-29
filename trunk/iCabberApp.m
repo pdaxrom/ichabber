@@ -265,9 +265,10 @@ int buddy_compare(id left, id right, void * context)
 
 		[self loginMyAccount];	
 	    } else if (button == 1) {
-		[eyeCandy showStandardAlertWithString:@"About"
+		[eyeCandy showAlertWithTitle:@"About"
 			closeBtnTitle:@"Ok" 
-			withError:@"Simple gtalk/jabber client for ipod touch.\n2008 (c) sashz <sashz@pdaXrom.org>"];
+			withText:@"Simple gtalk/jabber client for the ipod touch and iphone.\n2008 (c) sashz <sashz@pdaXrom.org>"
+			andStyle:2];
 	    }
 	} else if (currPage == usersView) {
 	    if (button == 0) {

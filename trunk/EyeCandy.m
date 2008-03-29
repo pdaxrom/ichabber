@@ -4,7 +4,7 @@
 
 - (void) showStandardAlert:(NSString *)title closeBtnTitle:(NSString *)closeTitle withError:(NSError *)error
 {
-	alertButton = [NSArray arrayWithObjects:@"Close",nil];
+	alertButton = [NSArray arrayWithObjects:closeTitle,nil];
 	alert = [[UIAlertSheet alloc] initWithTitle:title buttons:alertButton defaultButtonIndex:0 delegate:self context:nil];
 	[alert setBodyText: [error localizedDescription]];
 	[alert popupAlertAnimated: TRUE];
@@ -12,9 +12,18 @@
 
 - (void) showStandardAlertWithString:(NSString *)title closeBtnTitle:(NSString *)closeTitle withError:(NSString *)error
 {
-	alertButton = [NSArray arrayWithObjects:@"Close",nil];
+	alertButton = [NSArray arrayWithObjects:closeTitle,nil];
 	alert = [[UIAlertSheet alloc] initWithTitle:title buttons:alertButton defaultButtonIndex:0 delegate:self context:nil];
 	[alert setBodyText: error];
+	[alert popupAlertAnimated: TRUE];
+}
+
+- (void) showAlertWithTitle:(NSString *)title closeBtnTitle:(NSString *)closeTitle withText:(NSString *)string andStyle:(int) style
+{
+	alertButton = [NSArray arrayWithObjects:closeTitle,nil];
+	alert = [[UIAlertSheet alloc] initWithTitle:title buttons:alertButton defaultButtonIndex:0 delegate:self context:nil];
+	[alert setBodyText: string];
+	[alert setAlertSheetStyle: style];
 	[alert popupAlertAnimated: TRUE];
 }
 
