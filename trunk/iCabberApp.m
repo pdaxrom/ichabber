@@ -31,6 +31,7 @@ int buddy_compare(id left, id right, void * context)
 	    cw_setproxy(NULL, 0, NULL, NULL);
 	
 	while(1) {
+	    NSLog(@"Connection...\n");
 	    if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort])) < 0) {
 		NSLog(@"Error conecting to (%@)\n", [myPrefs getServer]);
 		if (try--) {
@@ -56,6 +57,7 @@ int buddy_compare(id left, id right, void * context)
 
 	if ((idsession = srv_login(sock, my_servername, my_username, my_password, my_resource)) == NULL) {
 	    NSLog(@"Error sending login string...\n");
+	    srv_close(sock);
 	    return -1;
 	}
 	NSLog(@"Connected to %s: %s\n", my_servername, idsession);
