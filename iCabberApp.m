@@ -19,7 +19,7 @@ int buddy_compare(id left, id right, void * context)
 	int try = 10; // try connect 10 times
 	
 	if ([myPrefs useProxy]) {
-	    const char *host = [[myPrefs getProxyHost] UTF8String];
+	    const char *host = [[myPrefs getProxyServer] UTF8String];
 	    int port = [myPrefs getProxyPort];
 	    const char *user = [[myPrefs getProxyUser] UTF8String];
 	    const char *password = [[myPrefs getProxyPassword] UTF8String];
@@ -31,8 +31,8 @@ int buddy_compare(id left, id right, void * context)
 	    cw_setproxy(NULL, 0, NULL, NULL);
 	
 	while(1) {
-	    if ((sock = srv_connect(servername, serverport)) < 0) {
-		NSLog(@"Error conecting to (%s)\n", servername);
+	    if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort])) < 0) {
+		NSLog(@"Error conecting to (%@)\n", [myPrefs getServer]);
 		if (try--) {
 		    //wakeup wifi
 		    system("ping -c 1 talk.google.com");
@@ -51,12 +51,14 @@ int buddy_compare(id left, id right, void * context)
 	char *idsession;
 	const char *my_username = [[myPrefs getUsername] UTF8String];
 	const char *my_password = [[myPrefs getPassword] UTF8String];
+	const char *my_servername = [[myPrefs getServer] UTF8String];
+	const char *my_resource = [[myPrefs getResource] UTF8String];
 
-	if ((idsession = srv_login(sock, servername, my_username, my_password, my_resource)) == NULL) {
+	if ((idsession = srv_login(sock, my_servername, my_username, my_password, my_resource)) == NULL) {
 	    NSLog(@"Error sending login string...\n");
 	    return -1;
 	}
-	NSLog(@"Connected to %s: %s\n", servername, idsession);
+	NSLog(@"Connected to %s: %s\n", my_servername, idsession);
 	free(idsession);
 	return 0;
     }
@@ -117,29 +119,27 @@ int buddy_compare(id left, id right, void * context)
     }
 
     -(void)sendMessage:(NSString *) msg {
-	const char *my_username = [[myPrefs getUsername] UTF8String];
-	char *_msg = strdup([msg UTF8String]);
-	char *to = strdup([[currBuddy getJID] UTF8String]);
-	char from[1024];
-	
-	if (strchr(my_username, '@'))
-	    sprintf(from, "%s/%s", my_username, my_resource);
+	NSString *my_username = [myPrefs getUsername];
+	NSString *my_servername = [myPrefs getServer];
+	NSString *my_resource = [myPrefs getResource];
+	NSString *to = [currBuddy getJID];
+	NSString *from = [NSString alloc];
+
+	if ([my_username rangeOfString:@"@"].location != NSNotFound)
+	    from = [NSString stringWithFormat:@"%@/%@", my_username, my_resource];
 	else
-	    sprintf(from, "%s@%s/%s", my_username, servername, my_resource);
+	    from = [NSString stringWithFormat:@"%@@%@/%@", my_username, my_servername, my_resource];
 
-	//NSLog(@"Send from [%s] to [%s] [%s]\n\n", from, to, _msg);
-
-	srv_sendtext(sock, to, _msg, from);
+	//NSLog(@"send from [%@] to [%@] [%@]\n\n", from, to, msg);
+	
+	srv_sendtext(sock, [to UTF8String], [msg UTF8String], [from UTF8String]);
 
 	[[Notifications sharedInstance] playSound: 0];
 	
-	[self updateHistory:to from:(char *)my_username message:_msg 
-	    title:(([currBuddy getRFlag] == 0)?0:1) titlecolor:"#696969"];
+	[self updateHistory:to from:my_username message:msg 
+	    title:(([currBuddy getRFlag] == 0)?0:1) titlecolor:@"#696969"];
 	
 	[currBuddy clrRFlag];
-	
-	free(_msg);
-	free(to);
     }
 
     -(void)prepareLogin
@@ -159,63 +159,71 @@ int buddy_compare(id left, id right, void * context)
 	}
     }
 
-    - (void)updateUserView:(const char *)user {
-	char histfile[256];
-	char *username = strdup(user);
-	FILE *f;
-
-	NSLog(@"updateUserView %s\n", username);
+    - (void)updateUserView:(NSString *)username {
 	[userText setText:@""];
-	
-	strcpy(histfile, [[myPrefs getConfigDir] UTF8String]);
-	[self tolowerStr:username];
-	strcat(histfile, "/");
-	strcat(histfile, username);
-	f = fopen(histfile, "r");
-	if (f) {
-	    char buf[4096 + 1];
-	    do {
-		int r = fread(buf, 1, 4096, f);
-		if (r <= 0)
-		    break;
-		buf[r] = 0;
-		[userText setHTML: [NSString stringWithFormat:@"%@%@", [userText HTML], [NSString stringWithUTF8String:buf]]];
-	    } while(1);
-	    fclose(f);
-	}
-	free(username);
+	[userViewNavItem setTitle:username];
 
-	[userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
+	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
+
+	//NSLog(@"read history %@\n\n", name);
+
+	NSFileHandle *inFile = [NSFileHandle fileHandleForReadingAtPath:name];
+
+	if (inFile != nil) {
+	    unsigned long long fsize = [inFile seekToEndOfFile];
+	    if (fsize > MAX_USERLOG_SIZE)
+		[inFile seekToFileOffset: fsize - MAX_USERLOG_SIZE];
+	    else
+		[inFile seekToFileOffset: 0];
+
+	    NSData *fileData = [inFile readDataToEndOfFile];
+	    
+	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
+	    
+	    NSRange range = [tmp rangeOfString:@"<br/><table>"];
+	    
+	    if (range.location != NSNotFound) {
+		[userText setHTML: [tmp substringFromIndex:range.location]];
+		[userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
+	    }
+
+	    [inFile closeFile];
+	}
     }
 
-    - (void)updateHistory:(char *)username from:(char *) from message:(char *)message title:(int)title titlecolor:(char *)titlecolor {
-	char histfile[256];
-	char buf[4096];
-	FILE *f;
-
-	if (title)
-	    snprintf(buf, 4096, "<br/><table><tr><td width=320 bgcolor=%s><font color=#ffffff><b>%s</b></font></td></tr>"
-				            "<tr><td width=320>%s</td></tr></table>", titlecolor, from, message);
-	else
-	    snprintf(buf, 4096, "<table><tr><td width=320>%s</td></tr></table>", message);
-
-	strcpy(histfile, [[myPrefs getConfigDir] UTF8String]);
-	[self tolowerStr:username];
-	strcat(histfile, "/");
-	strcat(histfile, username);
-	f = fopen(histfile, "a");
-	if (f) {
-	    fprintf(f, buf);
-	    fclose(f);
-	}
+    - (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor {
+	NSString *_message;
 	
-	if (currBuddy != nil)
-	    if ([[[currBuddy getJID] lowercaseString] isEqualToString:[NSString stringWithUTF8String:username]]) {
-		//[self updateUserView:username];
-		[userText setHTML: [NSString stringWithFormat:@"%@%@", [userText HTML], [NSString stringWithUTF8String:buf]]];
+	if (title)
+	    _message = [NSString stringWithFormat:
+	    @"<br/><table><tr><td width=320 bgcolor=%@><font color=#ffffff><b>%@</b></font></td></tr>"
+	    "<tr><td width=320>%@</td></tr></table>",
+	    titlecolor, from, message];
+	else
+	    _message = [NSString stringWithFormat:@"<table><tr><td width=320>%@</td></tr></table>", message];
 
-		[userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:YES];
-	    }
+	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
+
+	//NSLog(@"write history %@\n\n", name);
+
+	if (![[NSFileManager defaultManager] fileExistsAtPath:name])
+	    [[NSFileManager defaultManager] createFileAtPath:name contents: nil attributes: nil];
+
+	NSFileHandle *outFile = [NSFileHandle fileHandleForUpdatingAtPath:name];
+
+	if (outFile != nil) {
+	    [outFile seekToEndOfFile];
+
+	    [outFile writeData:[NSData dataWithBytes:[_message UTF8String] length:[_message lengthOfBytesUsingEncoding:NSUTF8StringEncoding]]];
+	    
+	    [outFile closeFile];
+
+	    if (currBuddy != nil)
+		if ([[[currBuddy getJID] lowercaseString] isEqualToString:[username lowercaseString]]) {
+		    [userText setHTML: [NSString stringWithFormat:@"%@%@", [userText HTML], _message]];
+		    [userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:YES];
+		}
+	}	
     }
 
     - (void)loginMyAccount {
@@ -294,6 +302,7 @@ int buddy_compare(id left, id right, void * context)
 	    }
 	} else if (currPage == newMsg) {
 	    if (button == 0) {
+        	NSLog(@"pre3-2");
 		[self sendMessage:[replyText text]];
 
 		[transitionView transition: 2 fromView: newMsg toView: userView];
@@ -382,11 +391,12 @@ int buddy_compare(id left, id right, void * context)
         struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
         rect.origin = CGPointMake (0.0f, 0.0f);
         rect.size.height = 48.0f;
-        UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
-        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"History"]];
-        [nav showButtonsWithLeftTitle:@"Back" rightTitle: @"Reply" leftBack: YES];
-        [nav setDelegate: self];
-        [nav setBarStyle: 0];
+        UINavigationBar *userViewNav = [[UINavigationBar alloc] initWithFrame: rect];
+	userViewNavItem = [[UINavigationItem alloc] initWithTitle:@"History"];
+        [userViewNav pushNavigationItem: userViewNavItem];
+        [userViewNav showButtonsWithLeftTitle:@"Back" rightTitle: @"Reply" leftBack: YES];
+        [userViewNav setDelegate: self];
+        [userViewNav setBarStyle: 0];
 
         rect = [UIHardware fullScreenApplicationContentRect];
         rect.origin = CGPointMake (0.0f, 0.0f);
@@ -402,7 +412,7 @@ int buddy_compare(id left, id right, void * context)
 	[userText setText:@""];
 
         [mainView addSubview: userText];
-        [mainView addSubview: nav];
+        [mainView addSubview: userViewNav];
 
         return mainView;
     }
@@ -487,7 +497,7 @@ int buddy_compare(id left, id right, void * context)
 	
 	Buddy *buddy = [buddyArray objectAtIndex:i];
 
-	[self updateUserView:[[buddy getJID] UTF8String]];
+	[self updateUserView:[buddy getJID]];
 
 	[buddy clrMsgCounter];
 
@@ -553,8 +563,10 @@ int buddy_compare(id left, id right, void * context)
 			}
 		    }
 
-		    [self updateHistory:incoming->from from:incoming->from message:incoming->body 
-			title:(([b getRFlag] != 1)?1:0) titlecolor:"#50afca"];
+		    [self updateHistory:[NSString stringWithUTF8String:incoming->from] 
+			from:[NSString stringWithUTF8String: incoming->from] 
+			message:[NSString stringWithUTF8String: incoming->body] 
+			title:(([b getRFlag] != 1)?1:0) titlecolor:@"#50afca"];
 		    
 		    [b setRFlag];
 		    
@@ -659,10 +671,6 @@ int buddy_compare(id left, id right, void * context)
 	
 	connected = 0;
 
-	my_resource = "itouchabber";
-	servername = "talk.google.com";
-	serverport = 5223;
-	
 	ping_interval = 80;
 	ping_counter = ping_interval;
 	

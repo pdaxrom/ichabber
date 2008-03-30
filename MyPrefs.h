@@ -41,9 +41,12 @@
 
 - (NSString *) getUsername;
 - (NSString *) getPassword;
+- (NSString *) getResource;
+- (NSString *) getServer;
+- (int) getPort;
 
 - (int) useProxy;
-- (NSString *) getProxyHost;
+- (NSString *) getProxyServer;
 - (int) getProxyPort;
 - (NSString *) getProxyUser;
 - (NSString *) getProxyPassword;
