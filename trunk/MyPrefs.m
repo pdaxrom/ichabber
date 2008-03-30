@@ -32,7 +32,7 @@
 	[switchControl release];
 
 	_proxy_host = [[UIPreferencesTextTableCell alloc] init];
-	[_proxy_host setTitle:@"Host"];
+	[_proxy_host setTitle:@"Server"];
 	[_proxy_host setValue:@""];
 	[[_proxy_host textField] setAutoCapsType:0];
 
@@ -146,6 +146,21 @@
 	return [[_password textField] text];
     }
 
+    - (NSString *) getResource
+    {
+	return @"itouchabber";
+    }
+
+    - (NSString *) getServer
+    {
+	return @"talk.google.com";
+    }
+    
+    - (int) getPort
+    {
+	return 5223;
+    }
+
     - (int) useProxy
     {
 	UISwitchControl* sw = [_proxy_enable control];
@@ -155,7 +170,7 @@
 	    return 0;
     }
     
-    - (NSString *) getProxyHost
+    - (NSString *) getProxyServer
     {
 	return [[_proxy_host textField] text];
     }

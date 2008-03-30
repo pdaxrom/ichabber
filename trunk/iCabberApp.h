@@ -6,6 +6,8 @@
 #import "Buddy.h"
 #import "EyeCandy.h"
 
+#define MAX_USERLOG_SIZE 2048
+
 @interface iCabberApp : UIApplication {
     UITransitionView *transitionView;
     MyPrefs *myPrefs;
@@ -21,6 +23,7 @@
     
     // Buddy
     Buddy *currBuddy;
+    UINavigationItem *userViewNavItem;
     UITextView *replyText;
     UITextView *userText;
 
@@ -34,9 +37,6 @@
     UIImage *image_content;
     
     // Network variables
-    char *servername;
-    int  serverport;
-    const char *my_resource;
     int sock;
     
     //ping counter
@@ -46,7 +46,7 @@
     int connected;
 }
 
-- (void)updateHistory:(char *)username from:(char *) from message:(char *)message title:(int)title titlecolor:(char *)titlecolor;
+- (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor;
 - (Buddy *)getBuddy:(NSString *) jid;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
