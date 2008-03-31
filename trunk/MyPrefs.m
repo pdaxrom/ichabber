@@ -25,9 +25,37 @@
 	[_password setValue:@""];
 	[[_password textField] setSecure:YES];
 
+	_use_gtalk = [[UIPreferencesControlTableCell alloc] init];
+	[_use_gtalk setTitle:@"Google Talk"];
+	UISwitchControl *switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[_use_gtalk setControl:switchControl];
+	[switchControl release];
+
+	_server = [[UIPreferencesTextTableCell alloc] init];
+	[_server setTitle:@"Server"];
+	[_server setValue:@""];
+	[[_server textField] setAutoCapsType:0];
+
+	_port = [[UIPreferencesTextTableCell alloc] init];
+	[_port setTitle:@"Port"];
+	[_port setValue:@""];
+	[[_port textField] setAutoCapsType:0];
+
+	_use_ssl = [[UIPreferencesControlTableCell alloc] init];
+	[_use_ssl setTitle:@"SSL"];
+	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[_use_ssl setControl:switchControl];
+	[switchControl release];
+
+	_use_ssl_verify = [[UIPreferencesControlTableCell alloc] init];
+	[_use_ssl_verify setTitle:@"SSL verify"];
+	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[_use_ssl_verify setControl:switchControl];
+	[switchControl release];
+
 	_proxy_enable = [[UIPreferencesControlTableCell alloc] init];
 	[_proxy_enable setTitle:@"Proxy"];
-	UISwitchControl *switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[_proxy_enable setControl:switchControl];
 	[switchControl release];
 
@@ -82,6 +110,35 @@
 	    _S(_username, data);
 	if (readconf(conf, "password", data))
 	    _S(_password, data);
+	if (readconf(conf, "server", data))
+	    _S(_server, data);
+	if (readconf(conf, "port", data))
+	    _S(_port, data);
+
+	if (readconf(conf, "use_ssl", data)) {
+	    UISwitchControl* sw = [_use_ssl control];
+	    if (!strcmp(data, "yes"))
+		[sw setValue:1.0f];
+	    else
+		[sw setValue:0.0f];
+	}
+
+	if (readconf(conf, "use_ssl_verify", data)) {
+	    UISwitchControl* sw = [_use_ssl_verify control];
+	    if (!strcmp(data, "yes"))
+		[sw setValue:1.0f];
+	    else
+		[sw setValue:0.0f];
+	}
+
+	if (readconf(conf, "use_gtalk", data)) {
+	    UISwitchControl* sw = [_use_gtalk control];
+	    if (!strcmp(data, "yes"))
+		[sw setValue:1.0f];
+	    else
+		[sw setValue:0.0f];
+	}
+
 	if (readconf(conf, "proxy_host", data))
 	    _S(_proxy_host, data);
 	if (readconf(conf, "proxy_port", data))
@@ -113,16 +170,23 @@
 
 	writeconf(conf, "username", _G(_username), 1);
 	writeconf(conf, "password", _G(_password), 0);
+	writeconf(conf, "server", _G(_server), 0);
+	writeconf(conf, "port", _G(_port), 0);
+
+	UISwitchControl* sw = [_use_ssl control];
+	writeconf(conf, "use_ssl", ([sw value] == 1.0f)?"yes":"no", 0);
+	sw = [_use_ssl_verify control];
+	writeconf(conf, "use_ssl_verify", ([sw value] == 1.0f)?"yes":"no", 0);
+	sw = [_use_gtalk control];
+	writeconf(conf, "use_gtalk", ([sw value] == 1.0f)?"yes":"no", 0);
+
 	writeconf(conf, "proxy_host", _G(_proxy_host), 0);
 	writeconf(conf, "proxy_port", _G(_proxy_port), 0);
 	writeconf(conf, "proxy_username", _G(_proxy_username), 0);
 	writeconf(conf, "proxy_password", _G(_proxy_password), 0);
 
-	UISwitchControl* sw = [_proxy_enable control];
-	if ([sw value] == 1.0f)
-	    writeconf(conf, "proxy_enabled", "yes", 0);
-	else
-	    writeconf(conf, "proxy_enabled", "no", 0);
+	sw = [_proxy_enable control];
+	writeconf(conf, "proxy_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
 
 #undef _G
     }
@@ -153,12 +217,50 @@
 
     - (NSString *) getServer
     {
-	return @"talk.google.com";
+	UISwitchControl* sw = [_use_gtalk control];
+	if ([sw value] == 1.0f)
+	    return @"talk.google.com";
+	else
+	    return [[_server textField] text];
     }
     
     - (int) getPort
     {
-	return 5223;
+	UISwitchControl* sw = [_use_gtalk control];
+	if ([sw value] == 1.0f)
+	    return 5223;
+
+	sw = [_use_ssl control];
+	if ([sw value] == 1.0f)
+	    return 5223;
+	else
+	    return 5222;	
+    }
+
+    - (int) useSSL
+    {
+	UISwitchControl* sw = [_use_gtalk control];
+	if ([sw value] == 1.0f)
+	    return 1;
+
+	sw = [_use_ssl control];
+	if ([sw value] == 1.0f)
+	    return 1;
+	else
+	    return 0;
+    }
+
+    - (int) useSSLVerify
+    {
+	UISwitchControl* sw = [_use_gtalk control];
+	if ([sw value] == 1.0f)
+	    return 0;
+
+	sw = [_use_ssl_verify control];
+	if ([sw value] == 1.0f)
+	    return 1;
+	else
+	    return 0;
     }
 
     - (int) useProxy
@@ -198,7 +300,7 @@
 
     - (void)tableRowSelected:(NSNotification *)notification
     {
-	//NSLog(@"selected row %d %s\n", [table selectedRow], [[[_username textField] text] cString]);
+	//NSLog(@"selected row %d %s\n", [table selectedRow], [[[_username textField] text] UTF8String]);
 	//NSLog(@"selected row %s\n", zz);
     }
 
@@ -212,7 +314,7 @@
     {
 	switch (group) {
 	    case 0:
-		return 2;
+		return 5;
 	    case 1:
 		return 5;
 	}
@@ -233,6 +335,16 @@
 		    return _username;
 		case 1:
 		    return _password;
+		case 2:
+		    return _use_gtalk;
+		case 3:
+		    return _server;
+//		case 4:
+//		    return _port;
+		case 4:
+		    return _use_ssl;
+//		case 5:
+//		    return _use_ssl_verify;
 	    }
 	} else if (group == 1) {
 	    switch(row) {
@@ -255,6 +367,11 @@
     {
 	[_username release];
 	[_password release];
+	[_server release];
+	[_port release];
+	[_use_ssl release];
+	[_use_ssl_verify release];
+	[_use_gtalk release];
 	[_proxy_host release];
 	[_proxy_port release];
 	[_proxy_username release];

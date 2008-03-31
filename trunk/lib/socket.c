@@ -9,8 +9,6 @@
 #include "socket.h"
 #include <signal.h>
 
-static int ssl = 1;
-
 /* Desc: create socket connection
  * 
  * In  : servername, port
@@ -18,7 +16,7 @@ static int ssl = 1;
  *
  * Note: -
  */
-int sk_conn(struct sockaddr *name)
+int sk_conn(struct sockaddr *name, int ssl)
 {
   int sock;
 
@@ -53,7 +51,7 @@ int sk_conn(struct sockaddr *name)
  *
  * Note: -
  */
-int sk_send(int sock, char *buffer)
+int sk_send(int sock, char *buffer, int ssl)
 {
   if ((cw_write(sock, buffer, strlen(buffer), ssl)) == -1)
     return 0;
@@ -69,16 +67,7 @@ int sk_send(int sock, char *buffer)
  * Note: it is up to the caller to free the returned string
  */
 
-char *old_sk_recv(int sock)
-{
-    char *buffer = (char *) malloc(2048);
-    
-    cw_read(sock, buffer, 2048, ssl);
-    
-    return buffer;
-}
-
-char *sk_recv(int sock)
+char *sk_recv(int sock, int ssl)
 {
   int i = 1;
   int end = 0;
@@ -114,7 +103,7 @@ char *sk_recv(int sock)
   return retval;
 }
 
-void sk_close(int sock)
+void sk_close(int sock, int ssl)
 {
   cw_close(sock);
 }

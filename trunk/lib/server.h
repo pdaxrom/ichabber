@@ -6,6 +6,7 @@ typedef enum {
   SM_PRESENCE,
   SM_SUBSCRIBE,
   SM_UNSUBSCRIBE,
+  SM_STREAMERROR,
   SM_UNHANDLED
 } SRV_MSGTYPE;
 
@@ -16,20 +17,20 @@ typedef struct {
   char *body;			/* meaningful only with SM_MESSAGE */
 } srv_msg;
 
-char *srv_poll(int sock);
-int srv_connect(const char *server, unsigned int port);
-int srv_close(int sock);
+char *srv_poll(int sock, int ssl);
+int srv_connect(const char *server, unsigned int port, int ssl);
+int srv_close(int sock, int ssl);
 char *srv_login(int sock, const char *server, const char *user,
-		const char *pass, const char *resource);
-int srv_setpresence(int sock, const char *type);
-char *srv_getroster(int sock);
+		const char *pass, const char *resource, int ssl);
+int srv_setpresence(int sock, const char *type, int ssl);
+char *srv_getroster(int sock, int ssl);
 int srv_sendtext(int sock, const char *to, const char *text,
-		 const char *from);
-int srv_sendping(int sock);
-int check_io(int fd1);
-srv_msg *readserver(int sock);
-void srv_DelBuddy(int sock, char *jidname);
-void srv_AddBuddy(int sock, char *jidname);
-int srv_ReplyToSubscribe(int sock, const char *to, int status);
+		 const char *from, int ssl);
+int srv_sendping(int sock, int ssl);
+int check_io(int fd1, int ssl);
+srv_msg *readserver(int sock, int ssl);
+void srv_DelBuddy(int sock, char *jidname, int ssl);
+void srv_AddBuddy(int sock, char *jidname, int ssl);
+int srv_ReplyToSubscribe(int sock, const char *to, int status, int ssl);
 
 #endif

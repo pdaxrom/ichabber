@@ -20,6 +20,12 @@
     UIPreferencesTable *table;
     UIPreferencesTextTableCell *_username;
     UIPreferencesTextTableCell *_password;
+    UIPreferencesTextTableCell *_server;
+    UIPreferencesTextTableCell *_port;
+    UIPreferencesControlTableCell *_use_ssl;
+    UIPreferencesControlTableCell *_use_ssl_verify;
+
+    UIPreferencesControlTableCell *_use_gtalk;
 
     UIPreferencesTextTableCell *_proxy_host;
     UIPreferencesTextTableCell *_proxy_port;
@@ -44,6 +50,8 @@
 - (NSString *) getResource;
 - (NSString *) getServer;
 - (int) getPort;
+- (int) useSSL;
+- (int) useSSLVerify;
 
 - (int) useProxy;
 - (NSString *) getProxyServer;

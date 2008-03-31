@@ -3,9 +3,9 @@
 
 #include <sys/socket.h>
 
-int sk_conn(struct sockaddr *name);
-int sk_send(int sock, char *buffer);
-char *sk_recv(int sock);
-void sk_close(int sock);
+int sk_conn(struct sockaddr *name, int ssl);
+int sk_send(int sock, char *buffer, int ssl);
+char *sk_recv(int sock, int ssl);
+void sk_close(int sock, int ssl);
 
 #endif

@@ -6,7 +6,7 @@
 #include <time.h>
 
 /* Variables globales a UTILS.C */
-int DebugEnabled = 1;
+int DebugEnabled = 0;
 
 void ut_InitDebug(int level)
 {
