@@ -19,6 +19,9 @@
 
 #define JABBERPORT 5222
 
+/* hack :(( */
+static char *strbuffer = NULL;
+
 
 /* Desc: poll data from server
  * 
@@ -27,7 +30,7 @@
  *
  * Note: it is up to the caller to free the returned string
  */
-char *srv_poll(int sock)
+char *srv_poll(int sock, int ssl)
 {
   struct pollfd sock_p;
   sock_p.fd = sock;
@@ -36,7 +39,7 @@ char *srv_poll(int sock)
   poll(&sock_p, 1, 0);
 
   if (sock_p.revents) {
-    return sk_recv(sock);
+    return sk_recv(sock, ssl);
   }
 
   return NULL;
@@ -73,7 +76,7 @@ static uint32_t srv_resolve(const char *host)
  *
  * Note: if port is -1, the default Jabber port will be used
  */
-int srv_connect(const char *server, unsigned int port)
+int srv_connect(const char *server, unsigned int port, int ssl)
 {
   struct sockaddr_in name;
   int sock;
@@ -87,6 +90,10 @@ int srv_connect(const char *server, unsigned int port)
     port = JABBERPORT;
   }
 
+  if (strbuffer)
+    free(strbuffer);
+  strbuffer = NULL;
+  
   cw_set_ssl_options(0, NULL, NULL, NULL, server);
 
   name.sin_family = AF_INET;
@@ -97,7 +104,7 @@ int srv_connect(const char *server, unsigned int port)
     return -1;
   }
 
-  if ((sock = sk_conn((struct sockaddr *) &name)) < 0) {
+  if ((sock = sk_conn((struct sockaddr *) &name, ssl)) < 0) {
     fprintf(stderr, "Cant connect to \"%s:%u\"\n", server, port);
     return -1;
   }
@@ -105,9 +112,9 @@ int srv_connect(const char *server, unsigned int port)
   return sock;
 }
 
-int srv_close(int sock)
+int srv_close(int sock, int ssl)
 {
-    sk_close(sock);
+    sk_close(sock, ssl);
     return 0;
 }
 
@@ -119,7 +126,7 @@ int srv_close(int sock)
  * Note: it is up to the caller to free the returned string
  */
 char *srv_login(int sock, const char *server, const char *user,
-		const char *pass, const char *resource)
+		const char *pass, const char *resource, int ssl)
 {
   char *stringtosend = malloc(2048);
   char *response, *aux;
@@ -140,11 +147,11 @@ char *srv_login(int sock, const char *server, const char *user,
   strcat(stringtosend, "' xmlns='jabber:client' xmlns:stream='");
   strcat(stringtosend, "http://etherx.jabber.org/streams'>\n");
 
-  if (!sk_send(sock, stringtosend)) {
+  if (!sk_send(sock, stringtosend, ssl)) {
     perror("senddata (server.c:132)");
     return NULL;
   }
-  response = sk_recv(sock);
+  response = sk_recv(sock, ssl);
   if (strstr(response, "error")) {
     fprintf(stderr, "Response not valid:\n%s\n\n", response);
     //scr_CreatePopup("Error",
@@ -175,11 +182,11 @@ char *srv_login(int sock, const char *server, const char *user,
   strcat(stringtosend, "</password><resource>");
   strcat(stringtosend, resource);
   strcat(stringtosend, "</resource></query></iq>\n");
-  if (!sk_send(sock, stringtosend)) {
+  if (!sk_send(sock, stringtosend, ssl)) {
     perror("senddata (server.c:167)");
     return NULL;
   }
-  response = sk_recv(sock);
+  response = sk_recv(sock, ssl);
   if (strstr(response, "error")) {
 	fprintf(stderr, "Response not valid:\n%s\n\n", response);
 //    scr_CreatePopup("Error",
@@ -198,12 +205,12 @@ char *srv_login(int sock, const char *server, const char *user,
     strcat(stringtosend, pass);
     strcat(stringtosend, "</password>");
     strcat(stringtosend, "</query></iq>\n");
-    if (!sk_send(sock, stringtosend)) {
+    if (!sk_send(sock, stringtosend, ssl)) {
       perror("senddata (server.c:167)");
       return NULL;
     }
 
-    response = sk_recv(sock);
+    response = sk_recv(sock, ssl);
 //    scr_TerminateCurses();
     fprintf(stderr, "Reinicie cabber!\n\n");
     return NULL;
@@ -222,13 +229,13 @@ char *srv_login(int sock, const char *server, const char *user,
  *
  * Note: see `sk_send' for output values
  */
-int srv_setpresence(int sock, const char *type)
+int srv_setpresence(int sock, const char *type, int ssl)
 {
   int rv;
   char *str = malloc(1024);
 
   sprintf(str, "<presence><status>%s</status></presence>", type);
-  if (!(rv = sk_send(sock, str))) {
+  if (!(rv = sk_send(sock, str, ssl))) {
     perror("senddata (server.c:199)");
   }
   free(str);
@@ -237,9 +244,9 @@ int srv_setpresence(int sock, const char *type)
 }
 
 
-int srv_sendping(int sock)
+int srv_sendping(int sock, int ssl)
 {
-  return sk_send(sock, "<iq type='get' id='1003'><ping xmlns='urn:xmpp:ping'/></iq>");
+  return sk_send(sock, "<iq type='get' id='1003'><ping xmlns='urn:xmpp:ping'/></iq>", ssl);
 }
 
 /* Desc: request roster
@@ -249,21 +256,21 @@ int srv_sendping(int sock)
  *
  * Note: it is up to the caller to free the returned string
  */
-char *srv_getroster(int sock)
+char *srv_getroster(int sock, int ssl)
 {
   char *str = malloc(1024);
   char *ret;
   
   strcpy(str, "<iq type='get' id='1001'><query xmlns='");
   strcat(str, "jabber:iq:roster'/></iq>\n");
-  if (!sk_send(sock, str)) {
+  if (!sk_send(sock, str, ssl)) {
     perror("senddata (server.c:222)");
     return NULL;
   }
   free(str);
 
   while(1) {
-    ret = sk_recv(sock);
+    ret = sk_recv(sock, ssl);
     if (strlen(ret) > 0)
 	break;
     free(ret);
@@ -282,7 +289,7 @@ char *srv_getroster(int sock)
  * Note: -
  */
 int
-srv_sendtext(int sock, const char *to, const char *text, const char *from)
+srv_sendtext(int sock, const char *to, const char *text, const char *from, int ssl)
 {
   char *stringtosend = malloc(2048);
   char *utf8inputline = strdup(text); //utf8_encode(text);
@@ -290,7 +297,7 @@ srv_sendtext(int sock, const char *to, const char *text, const char *from)
   sprintf(stringtosend,
 	  "<message from='%s' to='%s' type='chat'><body>%s</body></message>",
 	  from, to, utf8inputline);
-  if (!sk_send(sock, stringtosend)) {
+  if (!sk_send(sock, stringtosend, ssl)) {
     perror("senddata (server.c:247)");
     return -1;
   }
@@ -300,10 +307,14 @@ srv_sendtext(int sock, const char *to, const char *text, const char *from)
   return 0;
 }
 
-int check_io(int fd1)
+int check_io(int fd1, int ssl)
 {
     fd_set readfs;
     struct timeval tv = {0, 1};
+    
+    if (strbuffer)
+	return 1;
+    
     FD_ZERO(&readfs);
     FD_SET(fd1, &readfs);
     return select(fd1 + 1, &readfs, NULL, NULL, &tv);
@@ -337,7 +348,7 @@ int _old_check_io(int fd1, int fd2)
   return (n);
 }
 
-static int check_reply(char *str)
+static int check_reply(char *str, char **ptr)
 {
     int i = 0;
     
@@ -352,6 +363,10 @@ static int check_reply(char *str)
 	    if (*(str + 1) == '>')
 		i--;
 	}
+	if ((i == 0) && (*str == '>')) {
+	    *ptr = str + 1;
+	    return i;
+	}
 	str++;
     }
 
@@ -365,12 +380,18 @@ static int check_reply(char *str)
  *
  * Note: returns NULL if no input from server
  */
-srv_msg *readserver(int sock)
+
+srv_msg *readserver(int sock, int ssl)
 {
   char *buffer = NULL;
   char *s;
+  char *nextstr = NULL;
   do {
-    s = sk_recv(sock);
+    if (strbuffer) {
+	s = strbuffer;
+	strbuffer = NULL;
+    } else
+	s = sk_recv(sock, ssl);
     if (!buffer)
 	buffer = s;	
     else {
@@ -378,11 +399,18 @@ srv_msg *readserver(int sock)
 	strcat(buffer, s);
 	free(s);
     }
-  } while(check_reply(buffer));
+  } while(check_reply(buffer, &nextstr));
+
+  if (nextstr) {
+    if (strlen(nextstr) > 0) {
+      strbuffer = strdup(nextstr);
+      *nextstr = 0;
+    }
+  }
 
   if (buffer != NULL) {
     srv_msg *msg = calloc(1, sizeof(srv_msg));
-    while (*buffer == ' ')
+    while ((*buffer > 0) && (*buffer <= ' '))
 	strcpy(buffer, buffer + 1);
     ut_WriteLog("readserver: [%s]\n\n", buffer);
     char *to = getattr(buffer, "to=");
@@ -421,6 +449,8 @@ srv_msg *readserver(int sock)
       } else if (!strcmp(type, "unsubscribe")) {	/* unsubscribe request */
         msg->m = SM_UNSUBSCRIBE;
       }
+    } else if (!strncmp(buffer, "<stream:error", 9)) {	/* stream error */
+	msg->m = SM_STREAMERROR;
     } else {
       msg->m = SM_UNHANDLED;
     }
@@ -447,6 +477,10 @@ srv_msg *readserver(int sock)
 	  *aux = '\0';
 	msg->from = from;
       }
+      break;
+
+    case SM_STREAMERROR:
+      ut_WriteLog("Stream error detected\n");
       break;
 
     case SM_UNHANDLED:
@@ -480,7 +514,7 @@ srv_msg *readserver(int sock)
   return NULL;
 }
 
-void srv_AddBuddy(int sock, char *jidname)
+void srv_AddBuddy(int sock, char *jidname, int ssl)
 {
   char *buffer = (char *) malloc(1024);
   char *p, *str;
@@ -500,11 +534,11 @@ void srv_AddBuddy(int sock, char *jidname)
     *p = '\0';
   strcat(buffer, str);
   strcat(buffer, "'/></query></iq>");
-  sk_send(sock, buffer);
+  sk_send(sock, buffer, ssl);
   free(buffer);
 
   for (i = 0; i < 2; i++) {
-    buffer = sk_recv(sock);
+    buffer = sk_recv(sock, ssl);
     ut_WriteLog("[Subscription]: %s\n", buffer);
     free(buffer);
   }
@@ -515,10 +549,10 @@ void srv_AddBuddy(int sock, char *jidname)
   strcat(buffer, jidname);
   strcat(buffer, "' type='subscribe'>");
   strcat(buffer, "<status>I would like to add you!</status></presence>");
-  sk_send(sock, buffer);
+  sk_send(sock, buffer, ssl);
   free(buffer);
 
-  buffer = sk_recv(sock);
+  buffer = sk_recv(sock, ssl);
   ut_WriteLog("[Subscription]: %s\n", buffer);
   free(buffer);
 
@@ -527,15 +561,15 @@ void srv_AddBuddy(int sock, char *jidname)
   strcpy(buffer, "<presence to='");
   strcat(buffer, jidname);
   strcat(buffer, "' type='subscribed'/>");
-  sk_send(sock, buffer);
+  sk_send(sock, buffer, ssl);
   free(buffer);
 
-  buffer = sk_recv(sock);
+  buffer = sk_recv(sock, ssl);
   ut_WriteLog("[Subscription]: %s\n", buffer);
   free(buffer);
 }
 
-void srv_DelBuddy(int sock, char *jidname)
+void srv_DelBuddy(int sock, char *jidname, int ssl)
 {
   char *buffer = (char *) malloc(1024);
 
@@ -544,15 +578,15 @@ void srv_DelBuddy(int sock, char *jidname)
   strcat(buffer, jidname);
   strcat(buffer, "' subscription='remove'/></query></iq>");
 
-  sk_send(sock, buffer);
+  sk_send(sock, buffer, ssl);
   free(buffer);
 
-  buffer = sk_recv(sock);
+  buffer = sk_recv(sock, ssl);
   ut_WriteLog("[SubscriptionRemove]: %s\n", buffer);
   free(buffer);
 }
 
-int srv_ReplyToSubscribe(int sock, const char *to, int status)
+int srv_ReplyToSubscribe(int sock, const char *to, int status, int ssl)
 {
   int rv;
   char *str = malloc(1024);
@@ -562,7 +596,7 @@ int srv_ReplyToSubscribe(int sock, const char *to, int status)
   else
     sprintf(str, "<presence to='%s' type='unsubscribed'/>", to);
 
-  if (!(rv = sk_send(sock, str))) {
+  if (!(rv = sk_send(sock, str, ssl))) {
     perror("senddata (server.c:199)");
   }
   

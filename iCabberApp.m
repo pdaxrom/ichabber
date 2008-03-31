@@ -33,7 +33,7 @@ int buddy_compare(id left, id right, void * context)
 	
 	while(1) {
 	    NSLog(@"Connection...\n");
-	    if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort])) < 0) {
+	    if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort], [myPrefs useSSL])) < 0) {
 		NSLog(@"Error conecting to (%@)\n", [myPrefs getServer]);
 		if (try--) {
 		    //wakeup wifi
@@ -56,9 +56,9 @@ int buddy_compare(id left, id right, void * context)
 	const char *my_servername = [[myPrefs getServer] UTF8String];
 	const char *my_resource = [[myPrefs getResource] UTF8String];
 
-	if ((idsession = srv_login(sock, my_servername, my_username, my_password, my_resource)) == NULL) {
+	if ((idsession = srv_login(sock, my_servername, my_username, my_password, my_resource, [myPrefs useSSL])) == NULL) {
 	    NSLog(@"Error sending login string...\n");
-	    srv_close(sock);
+	    srv_close(sock, [myPrefs useSSL]);
 	    return -1;
 	}
 	NSLog(@"Connected to %s: %s\n", my_servername, idsession);
@@ -67,9 +67,9 @@ int buddy_compare(id left, id right, void * context)
     }
 
     - (int)disconnectFromServer {
-	srv_setpresence(sock, "unavailable");
+	srv_setpresence(sock, "unavailable", [myPrefs useSSL]);
 
-	srv_close(sock);
+	srv_close(sock, [myPrefs useSSL]);
 
 	sock = -1;	
 	
@@ -77,7 +77,7 @@ int buddy_compare(id left, id right, void * context)
     }
 
     - (int)updateBuddies {
-	char *roster = srv_getroster(sock);
+	char *roster = srv_getroster(sock, [myPrefs useSSL]);
 	
 	if (roster) {
 	    char *aux;
@@ -89,6 +89,11 @@ int buddy_compare(id left, id right, void * context)
 		char *jid = getattr(aux, "jid=");
 		char *name = getattr(aux, "name=");
 		char *group = gettag(aux, "group");
+
+		if (name && (strlen(name) == 0)) {
+		    free(name);
+		    name = NULL;
+		}
 
 		//NSLog(@"[roster]: jid=%s, name=%s, group=%s\n\n", jid, name, group);
 		
@@ -116,7 +121,7 @@ int buddy_compare(id left, id right, void * context)
 
 	[usersTable reloadData];
 
-	srv_setpresence(sock, "Online!");
+	srv_setpresence(sock, "Online!", [myPrefs useSSL]);
 
 	return 0;
     }
@@ -135,7 +140,7 @@ int buddy_compare(id left, id right, void * context)
 
 	//NSLog(@"send from [%@] to [%@] [%@]\n\n", from, to, msg);
 	
-	srv_sendtext(sock, [to UTF8String], [msg UTF8String], [from UTF8String]);
+	srv_sendtext(sock, [to UTF8String], [msg UTF8String], [from UTF8String], [myPrefs useSSL]);
 
 	[[Notifications sharedInstance] playSound: 0];
 	
@@ -522,7 +527,7 @@ int buddy_compare(id left, id right, void * context)
 	if (!connected)
 	    return;
 
-	int x = check_io(sock);
+	int x = check_io(sock, [myPrefs useSSL]);
 	
 	//NSLog(@"IO %d\n", x);
 	
@@ -533,7 +538,7 @@ int buddy_compare(id left, id right, void * context)
 	    
 	    ping_counter = ping_interval;
 	    
-    	    srv_msg *incoming = readserver(sock);
+    	    srv_msg *incoming = readserver(sock, [myPrefs useSSL]);
 	    
     	    switch (incoming->m) {
     		case SM_PRESENCE:
@@ -586,6 +591,13 @@ int buddy_compare(id left, id right, void * context)
 		    free(incoming->from);
 		    break;
 
+		case SM_STREAMERROR:
+		    [self logoffMyAccount];
+		    [eyeCandy showStandardAlertWithString:@"Error!"
+			    closeBtnTitle:@"Ok" 
+			    withError:@"Stream error. Check your network and try connect again."];
+		    break;
+
     		case SM_UNHANDLED:
 		    break;
     	    }
@@ -607,7 +619,7 @@ int buddy_compare(id left, id right, void * context)
 	
 	if (ping_counter == (ping_interval / 4)) {
 	    NSLog(@"Send ping");
-	    srv_sendping(sock);
+	    srv_sendping(sock, [myPrefs useSSL]);
 	} else if (!ping_counter) {
 	    NSLog(@"BUMS! Network offline!");
 	    [self logoffMyAccount];
@@ -700,7 +712,7 @@ int buddy_compare(id left, id right, void * context)
 	    
 	    if (button == 1) {
 		NSString *jid = [b getBuddy];
-		srv_ReplyToSubscribe(sock, [jid UTF8String], 1);
+		srv_ReplyToSubscribe(sock, [jid UTF8String], 1, [myPrefs useSSL]);
 		Buddy *theBuddy = [[Buddy alloc] initWithJID:jid
 						     andName:jid
 						     andGroup:@"New"];
@@ -708,7 +720,7 @@ int buddy_compare(id left, id right, void * context)
 		[buddyArray sortUsingFunction:buddy_compare context:nil];
 		[usersTable reloadData];
 	    } else if (button == 2) {
-		srv_ReplyToSubscribe(sock, [[b getBuddy] UTF8String], 0);		
+		srv_ReplyToSubscribe(sock, [[b getBuddy] UTF8String], 0, [myPrefs useSSL]);
 	    }
 
 	    [b release];
