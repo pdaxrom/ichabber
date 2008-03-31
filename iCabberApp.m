@@ -12,7 +12,20 @@
 
 int buddy_compare(id left, id right, void * context)
 {
-	return [[left getName] localizedCaseInsensitiveCompare:[right getName]];
+    return [[left getName] localizedCaseInsensitiveCompare:[right getName]];
+}
+
+int buddy_compare_status(id left, id right, void * context)
+{
+    int l = [left getStatus];
+    int r = [right getStatus];
+    
+    if (l && (!r))
+	return -1;
+    if ((!l) && r)
+	return 1;
+	
+    return [[left getName] localizedCaseInsensitiveCompare:[right getName]];
 }
 
 @implementation iCabberApp
@@ -117,7 +130,7 @@ int buddy_compare(id left, id right, void * context)
 	    free(roster);
 	}
 	
-	[buddyArray sortUsingFunction:buddy_compare context:nil];
+	[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 
 	[usersTable reloadData];
 
@@ -545,6 +558,7 @@ int buddy_compare(id left, id right, void * context)
 		    b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
 		    if (b != nil) {
 			[b setStatus:incoming->connected];
+			[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 			[usersTable reloadData];
 		    }
 		    free(incoming->from);
@@ -717,7 +731,7 @@ int buddy_compare(id left, id right, void * context)
 						     andName:jid
 						     andGroup:@"New"];
 		[buddyArray addObject: [theBuddy autorelease]];
-		[buddyArray sortUsingFunction:buddy_compare context:nil];
+		[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 		[usersTable reloadData];
 	    } else if (button == 2) {
 		srv_ReplyToSubscribe(sock, [[b getBuddy] UTF8String], 0, [myPrefs useSSL]);
