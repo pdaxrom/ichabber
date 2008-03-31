@@ -4,6 +4,8 @@
 typedef enum {
   SM_MESSAGE,
   SM_PRESENCE,
+  SM_SUBSCRIBE,
+  SM_UNSUBSCRIBE,
   SM_UNHANDLED
 } SRV_MSGTYPE;
 
@@ -28,4 +30,6 @@ int check_io(int fd1);
 srv_msg *readserver(int sock);
 void srv_DelBuddy(int sock, char *jidname);
 void srv_AddBuddy(int sock, char *jidname);
+int srv_ReplyToSubscribe(int sock, const char *to, int status);
+
 #endif

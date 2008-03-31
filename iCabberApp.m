@@ -1,5 +1,6 @@
 #import "iCabberApp.h"
 #import "Buddy.h"
+#import "BuddyAction.h"
 #import "Notifications.h"
 #import <sys/stat.h>
 #import <unistd.h>
@@ -154,15 +155,8 @@ int buddy_compare(id left, id right, void * context)
 	[myPrefs saveConfig];
     }
 
-    - (void)tolowerStr:(char *) s {
-	while (*s) {
-	    *s = tolower(*s);
-	    s++;
-	}
-    }
-
     - (void)updateUserView:(NSString *)username {
-	[userText setText:@""];
+	[userText setHTML:@""];
 	[userViewNavItem setTitle:username];
 
 	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
@@ -181,7 +175,7 @@ int buddy_compare(id left, id right, void * context)
 	    NSData *fileData = [inFile readDataToEndOfFile];
 	    
 	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
-	    
+
 	    NSRange range = [tmp rangeOfString:@"<br/><table>"];
 	    
 	    if (range.location != NSNotFound) {
@@ -527,7 +521,7 @@ int buddy_compare(id left, id right, void * context)
     {
 	if (!connected)
 	    return;
-	
+
 	int x = check_io(sock);
 	
 	//NSLog(@"IO %d\n", x);
@@ -541,8 +535,6 @@ int buddy_compare(id left, id right, void * context)
 	    
     	    srv_msg *incoming = readserver(sock);
 	    
-	    //NSLog(@"get incoming message!\n");
-	    
     	    switch (incoming->m) {
     		case SM_PRESENCE:
 		    b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
@@ -553,6 +545,24 @@ int buddy_compare(id left, id right, void * context)
 		    free(incoming->from);
 		    break;
 
+		case SM_SUBSCRIBE: {
+		    NSString *jid = [NSString stringWithUTF8String: incoming->from];
+		    [eyeCandy showAlertYesNoWithTitle:@"Request received" 
+			      withText:[NSString stringWithFormat:@"Do you want to add user %@ to buddies?", jid] 
+			      andStyle:2
+			      andDelegate:self
+			      andContext:[[BuddyAction alloc] initWithBuddy:jid andAction:BUDDYACTION_UNSUBSCRIBE]];
+		    free(incoming->from);
+		    break;
+		    }
+
+		case SM_UNSUBSCRIBE: {
+		    NSString *jid = [NSString stringWithUTF8String: incoming->from];
+		    NSLog(@"Unsubscribe request from %@", jid);
+		    free(incoming->from);
+		    break;
+		    }
+		    
     		case SM_MESSAGE:
 		    [[Notifications sharedInstance] playSound: 1];
 		    
@@ -582,7 +592,7 @@ int buddy_compare(id left, id right, void * context)
     	    free(incoming);
 	} else if (x < 0) {
 	
-	    NSLog(@"select() error\n");
+	    NSLog(@"select() error");
 	    
 	    if (errno != EINTR) {
 		[self logoffMyAccount];
@@ -596,10 +606,10 @@ int buddy_compare(id left, id right, void * context)
 	ping_counter--;
 	
 	if (ping_counter == (ping_interval / 4)) {
-	    NSLog(@"Send ping\n");
+	    NSLog(@"Send ping");
 	    srv_sendping(sock);
 	} else if (!ping_counter) {
-	    NSLog(@"BUMS! Network offline!\n");
+	    NSLog(@"BUMS! Network offline!");
 	    [self logoffMyAccount];
 	    [eyeCandy showStandardAlertWithString:@"Error!"
 		    closeBtnTitle:@"Ok" 
@@ -673,12 +683,38 @@ int buddy_compare(id left, id right, void * context)
 	
 	connected = 0;
 
-	ping_interval = 80;
+	ping_interval = 80 * 4;
 	ping_counter = ping_interval;
-	
-	myTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self 
+
+	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 4.f) target:self 
     		    selector:@selector(timer:) userInfo:nil repeats:YES];		    
     }
+
+- (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
+{
+	NSLog(@"MAIN alert butt %d\n", button);
+	BuddyAction *b = [sheet context];
+	if (b != nil) {
+	    NSLog(@"jid=%@\n", [b getBuddy]);
+	    NSLog(@"action=%d\n", [b getAction]);
+	    
+	    if (button == 1) {
+		NSString *jid = [b getBuddy];
+		srv_ReplyToSubscribe(sock, [jid UTF8String], 1);
+		Buddy *theBuddy = [[Buddy alloc] initWithJID:jid
+						     andName:jid
+						     andGroup:@"New"];
+		[buddyArray addObject: [theBuddy autorelease]];
+		[buddyArray sortUsingFunction:buddy_compare context:nil];
+		[usersTable reloadData];
+	    } else if (button == 2) {
+		srv_ReplyToSubscribe(sock, [[b getBuddy] UTF8String], 0);		
+	    }
+
+	    [b release];
+	}
+	[sheet dismissAnimated: TRUE];
+}
 
 @end
 

@@ -17,6 +17,7 @@
 - (void) showStandardAlert:(NSString *)title closeBtnTitle:(NSString *)closeTitle withError:(NSError *)error;
 - (void) showStandardAlertWithString:(NSString *)title closeBtnTitle:(NSString *)closeTitle withError:(NSString *)error;
 - (void) showAlertWithTitle:(NSString *)title closeBtnTitle:(NSString *)closeTitle withText:(NSString *)string andStyle:(int) style;
+- (void) showAlertYesNoWithTitle:(NSString *)title withText:(NSString *)string andStyle:(int) style andDelegate:(id) delegate andContext:(id) context;
 - (void) showProgressHUD:(NSString *)label withWindow:(UIWindow *)w withView:(UIView *)v withRect:(struct CGRect)rect;
 - (void) hideProgressHUD;
 

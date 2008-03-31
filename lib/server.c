@@ -337,6 +337,27 @@ int _old_check_io(int fd1, int fd2)
   return (n);
 }
 
+static int check_reply(char *str)
+{
+    int i = 0;
+    
+    while (*str) {
+	if (*str == '<') {
+	    if (*(str + 1) == '/')
+		i--;
+	    else
+		i++;
+	}
+	if (*str == '/') {
+	    if (*(str + 1) == '>')
+		i--;
+	}
+	str++;
+    }
+
+    return i;
+}
+
 /* Desc: read data from server
  *
  * In  : socket
@@ -346,7 +367,18 @@ int _old_check_io(int fd1, int fd2)
  */
 srv_msg *readserver(int sock)
 {
-  char *buffer = sk_recv(sock);
+  char *buffer = NULL;
+  char *s;
+  do {
+    s = sk_recv(sock);
+    if (!buffer)
+	buffer = s;	
+    else {
+	buffer = realloc(buffer, strlen(buffer) + strlen(s) + 1);
+	strcat(buffer, s);
+	free(s);
+    }
+  } while(check_reply(buffer));
 
   if (buffer != NULL) {
     srv_msg *msg = calloc(1, sizeof(srv_msg));
@@ -384,6 +416,10 @@ srv_msg *readserver(int sock)
 	}
       } else if (!strncmp(type, "unavailable", 11)) {	/* offline */
 	msg->connected = 0;
+      } else if (!strcmp(type, "subscribe")) {		/* subscribe request */
+        msg->m = SM_SUBSCRIBE;
+      } else if (!strcmp(type, "unsubscribe")) {	/* unsubscribe request */
+        msg->m = SM_UNSUBSCRIBE;
       }
     } else {
       msg->m = SM_UNHANDLED;
@@ -403,6 +439,8 @@ srv_msg *readserver(int sock)
       break;
 
     case SM_PRESENCE:
+    case SM_SUBSCRIBE:
+    case SM_UNSUBSCRIBE:
       {
 	char *aux = strstr(from, "/");
 	if (aux)
@@ -420,7 +458,9 @@ srv_msg *readserver(int sock)
     if (to)
       free(to);
     if (from && (msg->m != SM_MESSAGE)
-	&& (msg->m != SM_PRESENCE))
+	&& (msg->m != SM_PRESENCE)
+	&& (msg->m != SM_SUBSCRIBE)
+	&& (msg->m != SM_UNSUBSCRIBE))
       free(from);
     if (id)
       free(id);
@@ -510,4 +550,23 @@ void srv_DelBuddy(int sock, char *jidname)
   buffer = sk_recv(sock);
   ut_WriteLog("[SubscriptionRemove]: %s\n", buffer);
   free(buffer);
+}
+
+int srv_ReplyToSubscribe(int sock, const char *to, int status)
+{
+  int rv;
+  char *str = malloc(1024);
+
+  if (status)
+    sprintf(str, "<presence to='%s' type='subscribed'/>", to);
+  else
+    sprintf(str, "<presence to='%s' type='unsubscribed'/>", to);
+
+  if (!(rv = sk_send(sock, str))) {
+    perror("senddata (server.c:199)");
+  }
+  
+  free(str);
+
+  return rv;
 }

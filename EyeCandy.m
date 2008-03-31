@@ -27,8 +27,23 @@
 	[alert popupAlertAnimated: TRUE];
 }
 
+- (void) showAlertYesNoWithTitle:(NSString *)title withText:(NSString *)string andStyle:(int) style andDelegate:(id) delegate andContext:(id) context
+{
+	//alertButton = [NSArray arrayWithObjects:closeTitle,nil];
+	alert = [[ UIAlertSheet alloc ] initWithFrame: CGRectMake(0, 240, 320, 240) ];
+	[alert setTitle: title];
+	[alert setBodyText: string];
+	[alert setContext: context];
+	[alert addButtonWithTitle:@"YES"];
+	[alert setDestructiveButton: [alert addButtonWithTitle:@"NO"]];
+	[alert setDelegate: delegate];
+	[alert setAlertSheetStyle: style];
+	[alert popupAlertAnimated: TRUE];
+}
+
 - (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
 {
+	NSLog(@"alert butt %d\n", button);
 	[sheet dismissAnimated: TRUE];
 }
 
