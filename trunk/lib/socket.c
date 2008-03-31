@@ -108,7 +108,7 @@ char *sk_recv(int sock)
       end = 0;
     else
       end = 1;
-    memset(buffer, 0, tambuffer);
+    memset(buffer, 0, tambuffer + 1);
   }
   free(buffer);
   return retval;
