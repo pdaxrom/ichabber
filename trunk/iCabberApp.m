@@ -207,12 +207,20 @@ int buddy_compare_status(id left, id right, void * context)
 
     - (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor {
 	NSString *_message;
+
+	NSDate *_time = [[NSDate alloc] init];
+
+	NSString *stamp = [NSString stringWithFormat: @"%@", 
+			[_time descriptionWithCalendarFormat: 
+			@"%b %d, %Y %I:%M %p" timeZone:nil locale:nil]];
+	[_time release];
+	//NSLog(@"Stamp: %@", stamp);
 	
 	if (title)
 	    _message = [NSString stringWithFormat:
-	    @"<br/><table><tr><td width=320 bgcolor=%@><font color=#ffffff><b>%@</b></font></td></tr>"
+	    @"<br/><table><tr><td width=320 bgcolor=%@><font color=#ffffff><b>%@<br/>%@</b></font></td></tr>"
 	    "<tr><td width=320>%@</td></tr></table>",
-	    titlecolor, from, message];
+	    titlecolor, stamp, from, message];
 	else
 	    _message = [NSString stringWithFormat:@"<table><tr><td width=320>%@</td></tr></table>", message];
 
