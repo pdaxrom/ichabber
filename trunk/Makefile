@@ -35,7 +35,7 @@ clean:
 		rm -rf $(TARGET).app
 
 upload: $(TARGET)
-	scp $(TARGET) root@ipod:/Applications/iChabber.app/
+	scp $(TARGET) root@sashz-iphone:/Applications/iChabber.app/
 
 package: $(TARGET)
 	rm -rf $(TARGET).app
