@@ -5,6 +5,7 @@
 #import "MyPrefs.h"
 #import "Buddy.h"
 #import "EyeCandy.h"
+#import "JabberConnection.h"
 
 #define MAX_USERLOG_SIZE 2048
 
@@ -37,7 +38,7 @@
     UIImage *image_content;
     
     // Network variables
-    int sock;
+    JabberConnection* _jabber;
     
     //ping counter
     int ping_counter;
@@ -52,5 +53,6 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
 - (void)applicationSuspend:(GSEvent *)event;
 - (void)applicationResume:(GSEvent *)event;
+- (void)dealloc;
 
 @end
