@@ -184,23 +184,26 @@ int buddy_compare_status(id left, id right, void * context)
 	NSFileHandle *inFile = [NSFileHandle fileHandleForReadingAtPath:name];
 
 	if (inFile != nil) {
+	    const char *data, *ptr;
+	    
 	    unsigned long long fsize = [inFile seekToEndOfFile];
+	    
 	    if (fsize > MAX_USERLOG_SIZE)
 		[inFile seekToFileOffset: fsize - MAX_USERLOG_SIZE];
 	    else
 		[inFile seekToFileOffset: 0];
 
 	    NSData *fileData = [inFile readDataToEndOfFile];
-	    
-	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
 
-	    NSRange range = [tmp rangeOfString:@"<br/><table>"];
+	    data = [fileData bytes];
+	    ptr = strcasestr(data, "<br/><table>");
 	    
-	    if (range.location != NSNotFound) {
-		[userText setHTML: [tmp substringFromIndex:range.location]];
+	    if (ptr) {
+		NSString *tmp = [[NSString alloc] initWithData:[[NSData alloc] initWithBytesNoCopy:(void *)ptr length:(MAX_USERLOG_SIZE - (ptr - data))] encoding:NSUTF8StringEncoding];
+
+		[userText setHTML: tmp];
 		[userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
 	    }
-
 	    [inFile closeFile];
 	}
     }
