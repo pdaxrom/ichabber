@@ -29,8 +29,22 @@ int buddy_compare_status(id left, id right, void * context)
 }
 
 @implementation iCabberApp
+    - (BOOL)hasNetworkConnection {
+	if(![[NetworkController sharedInstance] isNetworkUp]) {
+	    NSLog(@"Bring up edge");
+	    [[NetworkController sharedInstance] keepEdgeUp];
+	    [[NetworkController sharedInstance] bringUpEdge];
+	    sleep(4);
+	}
+	return [[NetworkController sharedInstance] isNetworkUp];
+    }
+    
     - (int)connectToServer {
 	int try = 10; // try connect 10 times
+
+	if(![self hasNetworkConnection]) {
+	    return -1;
+	}
 	
 	if ([myPrefs useProxy]) {
 	    const char *host = [[myPrefs getProxyServer] UTF8String];
@@ -184,6 +198,12 @@ int buddy_compare_status(id left, id right, void * context)
 	NSFileHandle *inFile = [NSFileHandle fileHandleForReadingAtPath:name];
 
 	if (inFile != nil) {
+	    NSData *fileData = [inFile readDataToEndOfFile];
+	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
+
+	    [userText setHTML: tmp];
+	    [userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
+#if 0
 	    const char *data, *ptr;
 	    
 	    unsigned long long fsize = [inFile seekToEndOfFile];
@@ -199,11 +219,12 @@ int buddy_compare_status(id left, id right, void * context)
 	    ptr = strcasestr(data, "<br/><table>");
 	    
 	    if (ptr) {
-		NSString *tmp = [[NSString alloc] initWithData:[[NSData alloc] initWithBytesNoCopy:(void *)ptr length:(MAX_USERLOG_SIZE - (ptr - data))] encoding:NSUTF8StringEncoding];
+		NSString *tmp = [[NSString alloc] initWithData:[[NSData alloc] initWithBytesNoCopy:(void *)ptr length:([fileData length] - (ptr - data))] encoding:NSUTF8StringEncoding];
 
 		[userText setHTML: tmp];
 		[userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
 	    }
+#endif
 	    [inFile closeFile];
 	}
     }
@@ -268,7 +289,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    /* handle connection error here */
 	    	[eyeCandy showStandardAlertWithString:@"Error!"
 		    closeBtnTitle:@"Ok" 
-		    withError:@"Unable to connect to remote server. Check your settings and try again."];
+		    withError:@"Unable to connect to remote server. Check your network settings and try again."];
 	    return;
 	}
 	[transitionView transition: 1 fromView: mySettings toView: usersView];
@@ -624,6 +645,12 @@ int buddy_compare_status(id left, id right, void * context)
 		    break;
 
     		case SM_UNHANDLED:
+		    break;
+		case SM_NODATA:
+		    NSLog(@"No data received");
+		    break;
+		case SM_NEEDDATA:
+		    NSLog(@"Incomplete read");
 		    break;
     	    }
     	    free(incoming);

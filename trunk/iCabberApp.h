@@ -2,6 +2,7 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import <UIKit/UIKit.h>
 #import <GraphicsServices/GraphicsServices.h>
+#import <Message/NetworkController.h>
 #import "MyPrefs.h"
 #import "Buddy.h"
 #import "EyeCandy.h"

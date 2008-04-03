@@ -21,7 +21,10 @@
 
 /* hack :(( */
 static char *strbuffer = NULL;
+static int strbuffer_incomplete_string = 0;
 
+static int check_reply(char *str, char **ptr);
+char *srv_readstr(int sock, int ssl);
 
 /* Desc: poll data from server
  * 
@@ -93,6 +96,7 @@ int srv_connect(const char *server, unsigned int port, int ssl)
   if (strbuffer)
     free(strbuffer);
   strbuffer = NULL;
+  strbuffer_incomplete_string = 0;
   
   cw_set_ssl_options(0, NULL, NULL, NULL, server);
 
@@ -186,7 +190,7 @@ char *srv_login(int sock, const char *server, const char *user,
     perror("senddata (server.c:167)");
     return NULL;
   }
-  response = sk_recv(sock, ssl);
+  response = srv_readstr(sock, ssl);
   if (strstr(response, "error")) {
 	fprintf(stderr, "Response not valid:\n%s\n\n", response);
 //    scr_CreatePopup("Error",
@@ -210,7 +214,7 @@ char *srv_login(int sock, const char *server, const char *user,
       return NULL;
     }
 
-    response = sk_recv(sock, ssl);
+    response = srv_readstr(sock, ssl);
 //    scr_TerminateCurses();
     fprintf(stderr, "Reinicie cabber!\n\n");
     return NULL;
@@ -259,7 +263,6 @@ int srv_sendping(int sock, int ssl)
 char *srv_getroster(int sock, int ssl)
 {
   char *str = malloc(1024);
-  char *ret;
   
   strcpy(str, "<iq type='get' id='1001'><query xmlns='");
   strcat(str, "jabber:iq:roster'/></iq>\n");
@@ -269,15 +272,7 @@ char *srv_getroster(int sock, int ssl)
   }
   free(str);
 
-  while(1) {
-    ret = sk_recv(sock, ssl);
-    if (strlen(ret) > 0)
-	break;
-    free(ret);
-    continue;
-  }
-  
-  return ret;
+  return srv_readstr(sock, ssl);
 }
 
 
@@ -312,7 +307,7 @@ int check_io(int fd1, int ssl)
     fd_set readfs;
     struct timeval tv = {0, 1};
     
-    if (strbuffer)
+    if (strbuffer && (!strbuffer_incomplete_string))
 	return 1;
     
     FD_ZERO(&readfs);
@@ -320,37 +315,28 @@ int check_io(int fd1, int ssl)
     return select(fd1 + 1, &readfs, NULL, NULL, &tv);
 }
 
-int _old_check_io(int fd1, int fd2)
+char *srv_readstr(int sock, int ssl)
 {
-  int n = 0, i;
-  fd_set fds;
-  int io_pending = 0;
-
-  i = fd1;
-  if (fd2 > fd1)
-    i = fd2;
-
-  FD_ZERO(&fds);
-  if (fd1 >= 0)
-    FD_SET(fd1, &fds);
-  else
-    fd1 = 0;
-  if (fd2 >= 0)
-    FD_SET(fd2, &fds);
-  else
-    fd2 = 0;
-
-  if (fd2 == 0 && io_pending)
-    n = 2;
-  else if (select(i + 1, &fds, NULL, NULL, NULL) > 0)
-    n = 1 * (FD_ISSET(fd1, &fds) > 0) + 2 * (FD_ISSET(fd2, &fds) > 0);
-
-  return (n);
+  char *ret = NULL;
+  char *str;
+  
+  do {
+    str = sk_recv(sock, ssl);
+    if (ret) {
+      ret = (char *) realloc(ret, strlen(ret) + strlen(str) + 1);
+      strcat(ret, str);
+      free(str);
+    } else
+      ret = str;
+  } while (check_reply(ret, NULL));
+  
+  return ret;
 }
 
 static int check_reply(char *str, char **ptr)
 {
-    int i = 0;
+    int i = 0; 
+    int b = 1;
     
     while (*str) {
 	if (*str == '<') {
@@ -358,19 +344,21 @@ static int check_reply(char *str, char **ptr)
 		i--;
 	    else
 		i++;
+	    b = 0;
 	}
 	if (*str == '/') {
 	    if (*(str + 1) == '>')
 		i--;
 	}
 	if ((i == 0) && (*str == '>')) {
-	    *ptr = str + 1;
-	    return i;
+	    if (ptr)
+		*ptr = str + 1;
+	    return i | b;
 	}
 	str++;
     }
 
-    return i;
+    return 1;
 }
 
 /* Desc: read data from server
@@ -386,25 +374,43 @@ srv_msg *readserver(int sock, int ssl)
   char *buffer = NULL;
   char *s;
   char *nextstr = NULL;
-  do {
-    if (strbuffer) {
-	s = strbuffer;
-	strbuffer = NULL;
-    } else
-	s = sk_recv(sock, ssl);
-    if (!buffer)
-	buffer = s;	
-    else {
-	buffer = realloc(buffer, strlen(buffer) + strlen(s) + 1);
-	strcat(buffer, s);
-	free(s);
+  
+  if (strbuffer && (!strbuffer_incomplete_string)) {
+    buffer = strbuffer;
+  } else {
+    s = sk_recv(sock, ssl);
+    
+    if (!s) {
+	srv_msg *msg = calloc(1, sizeof(srv_msg));
+	msg->m = SM_NODATA;
+	return msg;
     }
-  } while(check_reply(buffer, &nextstr));
+	
+    if (!strbuffer) {
+      buffer = s;
+    } else {
+      buffer = strbuffer;
+      buffer = realloc(buffer, strlen(buffer) + strlen(s) + 1);
+      strcat(buffer, s);
+      free(s);
+    }
+  }
+  
+  strbuffer = NULL;
+
+  if ((strbuffer_incomplete_string = check_reply(buffer, &nextstr))) {
+    strbuffer = buffer;
+    
+    srv_msg *msg = calloc(1, sizeof(srv_msg));
+    msg->m = SM_NEEDDATA;
+    return msg;
+  }
 
   if (nextstr) {
     if (strlen(nextstr) > 0) {
       strbuffer = strdup(nextstr);
       *nextstr = 0;
+      strbuffer_incomplete_string = check_reply(strbuffer, &nextstr);
     }
   }
 
@@ -538,7 +544,7 @@ void srv_AddBuddy(int sock, char *jidname, int ssl)
   free(buffer);
 
   for (i = 0; i < 2; i++) {
-    buffer = sk_recv(sock, ssl);
+    buffer = srv_readstr(sock, ssl);
     ut_WriteLog("[Subscription]: %s\n", buffer);
     free(buffer);
   }
@@ -552,7 +558,7 @@ void srv_AddBuddy(int sock, char *jidname, int ssl)
   sk_send(sock, buffer, ssl);
   free(buffer);
 
-  buffer = sk_recv(sock, ssl);
+  buffer = srv_readstr(sock, ssl);
   ut_WriteLog("[Subscription]: %s\n", buffer);
   free(buffer);
 
@@ -564,7 +570,7 @@ void srv_AddBuddy(int sock, char *jidname, int ssl)
   sk_send(sock, buffer, ssl);
   free(buffer);
 
-  buffer = sk_recv(sock, ssl);
+  buffer = srv_readstr(sock, ssl);
   ut_WriteLog("[Subscription]: %s\n", buffer);
   free(buffer);
 }
@@ -581,7 +587,7 @@ void srv_DelBuddy(int sock, char *jidname, int ssl)
   sk_send(sock, buffer, ssl);
   free(buffer);
 
-  buffer = sk_recv(sock, ssl);
+  buffer = srv_readstr(sock, ssl);
   ut_WriteLog("[SubscriptionRemove]: %s\n", buffer);
   free(buffer);
 }
