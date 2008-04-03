@@ -69,6 +69,22 @@ int sk_send(int sock, char *buffer, int ssl)
 
 char *sk_recv(int sock, int ssl)
 {
+  char *buffer = (char *) malloc(1024+1);
+  
+  int ret = cw_read(sock, buffer, 1024, ssl);
+  if (ret <= 0) {
+    free(buffer);
+    //fprintf(stderr, "No data for recv\n");
+    return NULL;
+  }
+  
+  buffer[ret] = 0;
+  //fprintf(stderr, "Recv [%s]\n", buffer);
+  return buffer;
+}
+
+char *old_sk_recv(int sock, int ssl)
+{
   int i = 1;
   int end = 0;
   int tambuffer = 128;

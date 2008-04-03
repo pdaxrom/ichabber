@@ -123,7 +123,7 @@
 		[sw setValue:0.0f];
 	}
 
-	if (readconf(conf, "use_ssl_verify", data)) {
+	if (readconf(conf, "ssl_verify", data)) {
 	    UISwitchControl* sw = [_use_ssl_verify control];
 	    if (!strcmp(data, "yes"))
 		[sw setValue:1.0f];
@@ -176,7 +176,7 @@
 	UISwitchControl* sw = [_use_ssl control];
 	writeconf(conf, "use_ssl", ([sw value] == 1.0f)?"yes":"no", 0);
 	sw = [_use_ssl_verify control];
-	writeconf(conf, "use_ssl_verify", ([sw value] == 1.0f)?"yes":"no", 0);
+	writeconf(conf, "ssl_verify", ([sw value] == 1.0f)?"yes":"no", 0);
 	sw = [_use_gtalk control];
 	writeconf(conf, "use_gtalk", ([sw value] == 1.0f)?"yes":"no", 0);
 
