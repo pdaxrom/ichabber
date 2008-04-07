@@ -1,5 +1,7 @@
 TARGET = iChabber
 
+VERSION := r`unset LC_ALL ; svn info | grep Revision | cut -f2 -d':' | sed 's/ //g'`
+
 CC = arm-apple-darwin-gcc
 
 LD = $(CC)
@@ -25,14 +27,17 @@ all:	$(TARGET)
 OBJS = lib/connwrap/connwrap.o lib/server.o lib/socket.o lib/utf8.o lib/utils.o lib/conf.o
 APPOBJS = main.o iCabberApp.o MyPrefs.o Buddy.o Notifications.o EyeCandy.o BuddyAction.o
 
-$(TARGET):  $(APPOBJS) $(OBJS)
+$(TARGET):  version.h $(APPOBJS) $(OBJS)
 	$(LD) $(LDFLAGS_FRAMEWORKSDIR) $(LDFLAGS) -o $@ $^
+
+version.h:
+	echo "#define APP_VERSION \"$(VERSION)\"" > $@
 
 %.o:	%.m
 		$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 clean:
-		rm -f $(TARGET) $(OBJS) $(APPOBJS) $(TARGET).zip
+		rm -f $(TARGET) $(OBJS) $(APPOBJS) $(TARGET)-$(VERSION).zip version.h
 		rm -rf $(TARGET).app
 
 upload: $(TARGET)
@@ -47,4 +52,4 @@ package: $(TARGET)
 	cp sounds/*.aiff $(TARGET).app/
 
 dist: package
-	zip -9r $(TARGET).zip $(TARGET).app/
+	zip -9r $(TARGET)-$(VERSION).zip $(TARGET).app/

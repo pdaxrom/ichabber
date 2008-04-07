@@ -9,6 +9,7 @@
 #import "lib/utils.h"
 #import "lib/harddefines.h"
 #import "lib/connwrap/connwrap.h"
+#import "version.h"
 
 int buddy_compare(id left, id right, void * context)
 {
@@ -319,7 +320,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 		[self loginMyAccount];	
 	    } else if (button == 1) {
-		[eyeCandy showAlertWithTitle:@"About"
+		[eyeCandy showAlertWithTitle:@"iChabber "APP_VERSION
 			closeBtnTitle:@"Ok" 
 			withText:@"Simple gtalk/jabber client for the ipod touch and iphone.\n2008 (c) sashz <sashz@pdaXrom.org>"
 			andStyle:2];
