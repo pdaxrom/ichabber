@@ -192,31 +192,7 @@ char *srv_login(int sock, const char *server, const char *user,
   }
   response = srv_readstr(sock, ssl);
   if (strstr(response, "error")) {
-	fprintf(stderr, "Response not valid:\n%s\n\n", response);
-//    scr_CreatePopup("Error",
-//		    "Cuenta no creada o contrasea incorrecta", 60, 0,
-//		    NULL);
-//    scr_CreatePopup("Info", "Intentando crear la cuenta...", 60, 0, NULL);
-
-
-    strcpy(stringtosend, "<iq type='set' id='reg' to='");
-    strcat(stringtosend, server);
-    strcat(stringtosend, "'>");
-    strcat(stringtosend, "<query xmlns='jabber:iq:register'>");
-    strcat(stringtosend, "<username>");
-    strcat(stringtosend, username);
-    strcat(stringtosend, "</username><password>");
-    strcat(stringtosend, pass);
-    strcat(stringtosend, "</password>");
-    strcat(stringtosend, "</query></iq>\n");
-    if (!sk_send(sock, stringtosend, ssl)) {
-      perror("senddata (server.c:167)");
-      return NULL;
-    }
-
-    response = srv_readstr(sock, ssl);
-//    scr_TerminateCurses();
-    fprintf(stderr, "Reinicie cabber!\n\n");
+    free(idsession);
     return NULL;
   }
   free(response);
