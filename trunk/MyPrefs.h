@@ -13,10 +13,15 @@
 #import <UIKit/UIPreferencesDeleteTableCell.h>
 #import <UIKit/UISwitchControl.h>
 
+#import "EyeCandy.h"
+#import "version.h"
+
 #define CFGDIR  "Library/iChabber/"
 #define CFGNAME "config"
 
 @interface MyPrefs : UIView {
+    EyeCandy *eyeCandy; 
+    
     UIPreferencesTable *table;
     UIPreferencesTextTableCell *_username;
     UIPreferencesTextTableCell *_password;
@@ -37,7 +42,7 @@
     NSString *dirPath;
 }
 
-- (id)initWithFrame:(struct CGRect)frame;
+- (id)initPrefs;
 - (void)reloadData;
 
 - (void)loadConfig;

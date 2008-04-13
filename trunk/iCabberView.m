@@ -1,4 +1,4 @@
-#import "iCabberApp.h"
+#import "iCabberView.h"
 #import "Buddy.h"
 #import "BuddyAction.h"
 #import "Notifications.h"
@@ -12,6 +12,8 @@
 #import "version.h"
 
 extern UIApplication *UIApp;
+
+static id sharedInstanceiCabber;
 
 int buddy_compare(id left, id right, void * context)
 {
@@ -31,7 +33,7 @@ int buddy_compare_status(id left, id right, void * context)
     return [[left getName] localizedCaseInsensitiveCompare:[right getName]];
 }
 
-@implementation iCabberApp
+@implementation iCabberView
     - (BOOL)hasNetworkConnection {
 	if(![[NetworkController sharedInstance] isNetworkUp]) {
 	    NSLog(@"Bring up edge");
@@ -180,16 +182,6 @@ int buddy_compare_status(id left, id right, void * context)
 	[currBuddy clrRFlag];
     }
 
-    -(void)prepareLogin
-    {
-	[myPrefs loadConfig];
-    }
-
-    -(void)saveLoginSettings
-    {
-	[myPrefs saveConfig];
-    }
-
     - (void)updateUserView:(NSString *)username {
 	[userText setHTML:@""];
 	[userViewNavItem setTitle:username];
@@ -276,6 +268,7 @@ int buddy_compare_status(id left, id right, void * context)
     }
 
     - (void)loginMyAccount {
+	//NSLog(@">>%s %s\n", [[myPrefs getUsername] UTF8String], [[myPrefs getPassword] UTF8String]);
 	if (![self connectToServer]) {
 	    if (![self loginToServer]) {
 		[self updateBuddies];
@@ -295,7 +288,7 @@ int buddy_compare_status(id left, id right, void * context)
 		    withError:@"Unable to connect to remote server. Check your network settings and try again."];
 	    return;
 	}
-	[transitionView transition: 1 fromView: mySettings toView: usersView];
+	[transitionView transition: 1 fromView: myPrefs toView: usersView];
 	currPage = usersView;
         NSLog(@"0-1");
 	ping_counter = ping_interval;
@@ -305,29 +298,13 @@ int buddy_compare_status(id left, id right, void * context)
     - (void)logoffMyAccount {
 	connected = 0;
 	[self disconnectFromServer];
-	[transitionView transition: 2 fromView: usersView toView: mySettings];
-	currPage = mySettings;
+	[transitionView transition: 2 fromView: usersView toView: myPrefs];
+	currPage = myPrefs;
 	NSLog(@"1-0");
     }
 
     - (void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
-
-	if (currPage == mySettings) {
-	    if (button == 0) {
-		//NSLog(@">>%s %s\n", [[myPrefs getUsername] UTF8String], [[myPrefs getPassword] UTF8String]);
-		
-		[self saveLoginSettings];
-		
-		/* Connect here */
-
-		[self loginMyAccount];	
-	    } else if (button == 1) {
-		[eyeCandy showAlertWithTitle:@"iChabber "APP_VERSION
-			closeBtnTitle:@"Ok" 
-			withText:@"Simple gtalk/jabber client for the ipod touch and iphone.\n2008 (c) sashz <sashz@pdaXrom.org>"
-			andStyle:2];
-	    }
-	} else if (currPage == usersView) {
+	if (currPage == usersView) {
 	    if (button == 0) {
 		//[transitionView transition: 1 fromView: usersView toView: userView];
 		//currPage = userView;
@@ -393,41 +370,6 @@ int buddy_compare_status(id left, id right, void * context)
     {
 	[usersTable reloadData];
 	[self updateAppBadge];
-    }
-
-    -(id)MySettings
-    {
-        struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
-        //rect.origin = CGPointMake (0.0f, 0.0f);
-	rect.origin.y = 0;
-        rect.size.height = 48.0f;
-        UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
-        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"Account"]];
-
-        // 0 = greay
-        // 1 = red
-        // 2 = left arrow
-        // 3 = blue
-        [nav showLeftButton:@"About" withStyle:3 rightButton:@"Login" withStyle:3];
-
-        [nav setDelegate: self];
-	[nav setAutoresizesSubviews: YES];
-
-        rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 0.0f);
-        UIView *mainView = [[UIView alloc] initWithFrame: rect];
-
-        rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 48.0f);
-        rect.size.height -= 48.0f;
-        myPrefs = [[MyPrefs alloc] initWithFrame: rect];
-
-        [mainView addSubview: myPrefs];
-        [mainView addSubview: nav];
-
-	[self prepareLogin];
-
-        return mainView;
     }
 
     -(id)NewMsg
@@ -716,44 +658,48 @@ int buddy_compare_status(id left, id right, void * context)
 	}
     }
 
-    -(void)applicationSuspend:(GSEvent *)event {
-	if (!connected) {
-	    [UIApp removeApplicationBadge];
-	    exit(0);
-	}
+    -(int)isConnected {
+	return connected;
     }
 
-    -(void)applicationResume:(GSEvent *)event {
-    }
-
-    -(void)applicationExited:(GSEvent *)event {
-    }
-
-    -(void)applicationDidFinishLaunching:(NSNotification*)unused
+    - (id)initWithFrame:(CGRect) rect
     {
+	if ((self == [super initWithFrame: rect]) == nil)
+	    return self;
+
 	buddyArray = [[NSMutableArray alloc] init];
 
 	[[Notifications sharedInstance] setApp: self];	
 
 	eyeCandy = [[[EyeCandy alloc] init] retain];
 
-	struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
-	rect.origin.x = rect.origin.y = 0.0f;
-
-	UIWindow *window = [[UIWindow alloc] initWithContentRect: rect];
-
-        [window orderFront: self];
-        [window makeKey: self];
-        [window _setHidden: NO];
-
         transitionView = [[UITransitionView alloc] initWithFrame: rect];
         
-	[window setContentView: transitionView];
+	[self addSubview: transitionView];
 	
-	mySettings= [self MySettings];
+	myPrefs= [[MyPrefs alloc] initPrefs];
         usersView = [self UsersView];
         userView  = [self UserView];
         newMsg    = [self NewMsg];
+
+	image_online  = [UIImage applicationImageNamed: @"available.png"];
+	image_away    = [UIImage applicationImageNamed: @"away.png"];
+	image_xaway   = [UIImage applicationImageNamed: @"xaway.png"];
+	image_dnd     = [UIImage applicationImageNamed: @"dnd.png"];
+	image_chat    = [UIImage applicationImageNamed: @"chat.png"];
+	image_offline = [UIImage applicationImageNamed: @"offline.png"];
+	image_content = [UIImage applicationImageNamed: @"content.png"];
+
+	currBuddy = nil;
+	currPage  = myPrefs;
+	
+	connected = 0;
+
+	ping_interval = 80 * 4;
+	ping_counter = ping_interval;
+
+	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 4.f) target:self 
+    		    selector:@selector(timer:) userInfo:nil repeats:YES];	
 
 	/*
 	1 - slide left - pushes
@@ -767,30 +713,24 @@ int buddy_compare_status(id left, id right, void * context)
 	9 - slide down - doesn't push
 	*/
 
-        [transitionView transition: 0 toView: mySettings];
-
-	image_online  = [UIImage applicationImageNamed: @"available.png"];
-	image_away    = [UIImage applicationImageNamed: @"away.png"];
-	image_xaway   = [UIImage applicationImageNamed: @"xaway.png"];
-	image_dnd     = [UIImage applicationImageNamed: @"dnd.png"];
-	image_chat    = [UIImage applicationImageNamed: @"chat.png"];
-	image_offline = [UIImage applicationImageNamed: @"offline.png"];
-	image_content = [UIImage applicationImageNamed: @"content.png"];
-
-	currBuddy = nil;
-	currPage  = mySettings;
+        [transitionView transition: 0 toView: myPrefs];
 	
-	connected = 0;
-
-	ping_interval = 80 * 4;
-	ping_counter = ping_interval;
-
-	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 4.f) target:self 
-    		    selector:@selector(timer:) userInfo:nil repeats:YES];	
+	return self;
     }
 
-- (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
-{
+    +(id) initSharedInstanceWithFrame:(CGRect) rect
+    {
+	sharedInstanceiCabber = [[iCabberView alloc] initWithFrame:rect];
+	return sharedInstanceiCabber;
+    }
+
+    +(id) sharedInstance
+    {
+	return sharedInstanceiCabber;
+    }
+
+    - (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
+    {
 	NSLog(@"MAIN alert butt %d\n", button);
 	BuddyAction *b = [sheet context];
 	if (b != nil) {
@@ -813,7 +753,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    [b release];
 	}
 	[sheet dismissAnimated: TRUE];
-}
+    }
 
 @end
 
