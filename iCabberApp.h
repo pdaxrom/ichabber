@@ -27,7 +27,7 @@
     UINavigationItem *userViewNavItem;
     UITextView *replyText;
     UITextView *userText;
-
+    
     //Images
     UIImage *image_online;
     UIImage *image_away;
@@ -49,6 +49,7 @@
 
 - (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor;
 - (Buddy *)getBuddy:(NSString *) jid;
+- (void)updateUsersTable;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
 - (void)applicationSuspend:(GSEvent *)event;

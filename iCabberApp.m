@@ -11,6 +11,8 @@
 #import "lib/connwrap/connwrap.h"
 #import "version.h"
 
+extern UIApplication *UIApp;
+
 int buddy_compare(id left, id right, void * context)
 {
     return [[left getName] localizedCaseInsensitiveCompare:[right getName]];
@@ -147,7 +149,7 @@ int buddy_compare_status(id left, id right, void * context)
 	
 	[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 
-	[usersTable reloadData];
+	[self updateUsersTable];
 
 	srv_setpresence(sock, "Online!", [myPrefs useSSL]);
 
@@ -364,6 +366,35 @@ int buddy_compare_status(id left, id right, void * context)
 	}
     }
 
+    -(int)numNewMessages
+    {
+	int nbuddies = [buddyArray count];
+	int i;
+	int count = 0;
+	for (i = 0; i < nbuddies; i++) {
+	    Buddy *buddy = [buddyArray objectAtIndex: i];
+	    count += [buddy getMsgCounter];
+	}
+	return count;
+    }
+
+    -(void)updateAppBadge
+    {
+	int n = [self numNewMessages];
+	if (n) {
+	    NSString *badgeText = [[NSString alloc] initWithFormat:@"%d", n];
+	    [UIApp setApplicationBadge: badgeText];
+	} else {
+	    [UIApp removeApplicationBadge];
+	}
+    }
+
+    -(void)updateUsersTable
+    {
+	[usersTable reloadData];
+	[self updateAppBadge];
+    }
+
     -(id)MySettings
     {
         struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
@@ -491,7 +522,7 @@ int buddy_compare_status(id left, id right, void * context)
 	[usersTable setRowHeight:40];
 	[usersTable setDataSource: self];
 	[usersTable setDelegate: self];
-	[usersTable reloadData];
+	[self updateUsersTable];
 
         [mainView addSubview: nav];
         [mainView addSubview: usersTable];
@@ -548,7 +579,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	[buddy clrMsgCounter];
 
-	[usersTable reloadData];
+	[self updateUsersTable];
 
 	currBuddy = buddy;
 
@@ -592,7 +623,7 @@ int buddy_compare_status(id left, id right, void * context)
 		    if (b != nil) {
 			[b setStatus:incoming->connected];
 			[buddyArray sortUsingFunction:buddy_compare_status context:nil];
-			[usersTable reloadData];
+			[self updateUsersTable];
 		    }
 		    free(incoming->from);
 		    break;
@@ -623,7 +654,9 @@ int buddy_compare_status(id left, id right, void * context)
 			if (b != currBuddy) {
 			    [b incMsgCounter];
 			    if ([b getMsgCounter] < 2)
-				[usersTable reloadData];
+				[self updateUsersTable];
+			    else
+				[self updateAppBadge];
 			}
 		    }
 
@@ -685,6 +718,7 @@ int buddy_compare_status(id left, id right, void * context)
 
     -(void)applicationSuspend:(GSEvent *)event {
 	if (!connected) {
+	    [UIApp removeApplicationBadge];
 	    exit(0);
 	}
     }
@@ -752,7 +786,7 @@ int buddy_compare_status(id left, id right, void * context)
 	ping_counter = ping_interval;
 
 	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 4.f) target:self 
-    		    selector:@selector(timer:) userInfo:nil repeats:YES];		    
+    		    selector:@selector(timer:) userInfo:nil repeats:YES];	
     }
 
 - (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
@@ -771,7 +805,7 @@ int buddy_compare_status(id left, id right, void * context)
 						     andGroup:@"New"];
 		[buddyArray addObject: [theBuddy autorelease]];
 		[buddyArray sortUsingFunction:buddy_compare_status context:nil];
-		[usersTable reloadData];
+		[self updateUsersTable];
 	    } else if (button == 2) {
 		srv_ReplyToSubscribe(sock, [[b getBuddy] UTF8String], 0, [myPrefs useSSL]);
 	    }
