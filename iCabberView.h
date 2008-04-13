@@ -1,18 +1,26 @@
 #import <Foundation/Foundation.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <UIKit/UIKit.h>
+#import <UIKit/UITableCell.h>
+#import <UIKit/UIImageAndTextTableCell.h>
+#import <UIKit/UIImage.h>
+#import <UIKit/UITextView.h>
+#import <UIKit/UISwitchControl.h>
+#import <UIKit/UITransitionView.h>
+#import <UIKit/UIWindow.h>
+#import <UIKit/UIView.h>
 #import <GraphicsServices/GraphicsServices.h>
 #import <Message/NetworkController.h>
+
 #import "MyPrefs.h"
 #import "Buddy.h"
 #import "EyeCandy.h"
 
 #define MAX_USERLOG_SIZE 2048
 
-@interface iCabberApp : UIApplication {
+@interface iCabberView : UIView {
     UITransitionView *transitionView;
     MyPrefs *myPrefs;
-    UIView *mySettings;
     UIView *usersView;
     UIView *userView;
     UIView *newMsg;
@@ -47,12 +55,18 @@
     int connected;
 }
 
+- (id)initWithFrame:(CGRect) rect;
+
+- (int)isConnected;
+
+- (void)loginMyAccount;
+- (void)logoffMyAccount;
+
 - (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor;
 - (Buddy *)getBuddy:(NSString *) jid;
 - (void)updateUsersTable;
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
-- (void)applicationSuspend:(GSEvent *)event;
-- (void)applicationResume:(GSEvent *)event;
++ (id)initSharedInstanceWithFrame:(CGRect) rect;
++ (id)sharedInstance;
 
 @end

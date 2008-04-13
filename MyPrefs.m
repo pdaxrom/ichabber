@@ -1,19 +1,32 @@
 #import "MyPrefs.h"
+#import "iCabberView.h"
 #import "lib/conf.h"
 
 #define DEFAULT_PROXY_PORT 3124
 
 @implementation MyPrefs
 
-    -(id)initWithFrame:(struct CGRect)frame
+    -(id)initPrefs
     {
-	self = [super initWithFrame: frame];
-
-	CGRect rect = [UIHardware fullScreenApplicationContentRect];
-	//NSLog (@"::: %f, %f, %f, %f\n\n", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-
+        CGRect rect = [UIHardware fullScreenApplicationContentRect];
         rect.origin = CGPointMake (0.0f, 0.0f);
-        rect.size.height -= 48;
+	self = [super initWithFrame: rect];
+
+	rect.origin.y = 0;
+        rect.size.height = 48.0f;
+        UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
+        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"Account"]];
+
+        // 0 = greay
+        // 1 = red
+        // 2 = left arrow
+        // 3 = blue
+        [nav showLeftButton:@"About" withStyle:3 rightButton:@"Login" withStyle:3];
+
+        [nav setDelegate: self];
+	[nav setAutoresizesSubviews: YES];
+
+	[self addSubview: nav];
 
 	_username = [[UIPreferencesTextTableCell alloc] init];
 	[_username setTitle:@"Username"];
@@ -79,6 +92,9 @@
 	[_proxy_password setValue:@""];
 	[[_proxy_password textField] setSecure:YES];
 
+        rect = [UIHardware fullScreenApplicationContentRect];
+        rect.origin = CGPointMake (0.0f, 48.0f);
+        rect.size.height -= 48.0f;
 	table = [[UIPreferencesTable alloc] initWithFrame:rect];
 	[table setDataSource:self];
 	[table setDelegate:self];
@@ -93,6 +109,10 @@
 		[[NSFileManager defaultManager] createDirectoryAtPath:dirPath attributes:nil];
 	}
 
+	[self loadConfig];
+
+	eyeCandy = [[[EyeCandy alloc] init] retain];
+
 	return self;
     }
 
@@ -103,6 +123,8 @@
 	strcpy(conf, [dirPath UTF8String]);
 	strcat(conf, "/");
 	strcat(conf, CFGNAME);
+
+	NSLog(@"loadConfig from %s\n", conf);
 
 #define _S(obj, str) [obj setValue:[NSString stringWithUTF8String: str]]
 	
@@ -363,6 +385,23 @@
 	return nil;
     }
 
+    - (void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
+	if (button == 0) {
+	    //NSLog(@">>%s %s\n", [[self getUsername] UTF8String], [[self getPassword] UTF8String]);
+		
+	    [self saveConfig];
+		
+	    /* Connect here */
+
+	    [[iCabberView sharedInstance] loginMyAccount];
+	} else if (button == 1) {
+	    [eyeCandy showAlertWithTitle:@"iChabber "APP_VERSION
+		closeBtnTitle:@"Ok" 
+		withText:@"Simple gtalk/jabber client for the ipod touch and iphone.\n2008 (c) sashz <sashz@pdaXrom.org>"
+		andStyle:2];
+	}
+    }
+
     -(void)dealloc
     {
 	[_username release];
@@ -378,6 +417,7 @@
 	[_proxy_password release];
 	[_proxy_enable release];
 	[table release];
+	[eyeCandy release];
 	[super dealloc];
     }
 
