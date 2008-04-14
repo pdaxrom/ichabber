@@ -22,8 +22,16 @@ int buddy_compare(id left, id right, void * context)
 
 int buddy_compare_status(id left, id right, void * context)
 {
-    int l = [left getStatus];
-    int r = [right getStatus];
+    int l = [left getMsgCounter];
+    int r = [right getMsgCounter];
+
+    if (l && (!r))
+	return -1;
+    if ((!l) && r)
+	return 1;
+
+    l = [left getStatus];
+    r = [right getStatus];
     
     if (l && (!r))
 	return -1;
@@ -149,8 +157,6 @@ int buddy_compare_status(id left, id right, void * context)
 	    free(roster);
 	}
 	
-	[buddyArray sortUsingFunction:buddy_compare_status context:nil];
-
 	[self updateUsersTable];
 
 	srv_setpresence(sock, "Online!", [myPrefs useSSL]);
@@ -368,6 +374,7 @@ int buddy_compare_status(id left, id right, void * context)
 
     -(void)updateUsersTable
     {
+	[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 	[usersTable reloadData];
 	[self updateAppBadge];
     }
@@ -566,7 +573,6 @@ int buddy_compare_status(id left, id right, void * context)
 		    b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
 		    if (b != nil) {
 			[b setStatus:incoming->connected];
-			[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 			[self updateUsersTable];
 		    }
 		    free(incoming->from);
@@ -746,7 +752,6 @@ int buddy_compare_status(id left, id right, void * context)
 						     andName:jid
 						     andGroup:@"New"];
 		[buddyArray addObject: [theBuddy autorelease]];
-		[buddyArray sortUsingFunction:buddy_compare_status context:nil];
 		[self updateUsersTable];
 	    } else if (button == 2) {
 		srv_ReplyToSubscribe(sock, [[b getBuddy] UTF8String], 0, [myPrefs useSSL]);
