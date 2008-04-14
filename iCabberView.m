@@ -403,6 +403,8 @@ int buddy_compare_status(id left, id right, void * context)
 	[mainView addSubview: keyboard];
         [mainView addSubview: nav];
 
+	[replyText becomeFirstResponder];
+
         return mainView;
     }
 
