@@ -190,8 +190,8 @@ int buddy_compare_status(id left, id right, void * context)
     }
 
     - (void)updateUserView:(NSString *)username {
-	[userText setHTML:@""];
-	[userViewNavItem setTitle:username];
+	[userView setText:@""];
+	[userView setTitle:username];
 
 	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
 
@@ -203,8 +203,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    NSData *fileData = [inFile readDataToEndOfFile];
 	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
 
-	    [userText setHTML: tmp];
-	    [userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
+	    [userView setText: tmp];
 #if 0
 	    const char *data, *ptr;
 	    
@@ -223,8 +222,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    if (ptr) {
 		NSString *tmp = [[NSString alloc] initWithData:[[NSData alloc] initWithBytesNoCopy:(void *)ptr length:([fileData length] - (ptr - data))] encoding:NSUTF8StringEncoding];
 
-		[userText setHTML: tmp];
-		[userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:NO];
+		[userView setText: tmp];
 	    }
 #endif
 	    [inFile closeFile];
@@ -268,8 +266,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	    if (currBuddy != nil)
 		if ([[[currBuddy getJID] lowercaseString] isEqualToString:[username lowercaseString]]) {
-		    [userText setHTML: [NSString stringWithFormat:@"%@%@", [userText HTML], _message]];
-		    [userText scrollPointVisibleAtTopLeft:CGPointMake(0, 9999999) animated:YES];
+		    [userView appendText: _message];
 		}
 	}	
     }
@@ -322,17 +319,6 @@ int buddy_compare_status(id left, id right, void * context)
 		
 		[self logoffMyAccount];	
 	    }
-	} else if (currPage == userView) {
-	    if (button == 0) {
-		[transitionView transition: 1 fromView: userView toView: newMsg];
-		currPage = newMsg;
-        	NSLog(@"2-3");
-	    } else if (button == 1) {
-		[transitionView transition: 2 fromView: userView toView: usersView];
-		currPage = usersView;
-		currBuddy = nil;
-        	NSLog(@"2-1");
-	    }
 	}
     }
 
@@ -372,35 +358,17 @@ int buddy_compare_status(id left, id right, void * context)
 	currPage = userView;
     }
 
-    -(id)UserView
+    -(void)switchFromUserViewToUsers
     {
-        struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 0.0f);
-        rect.size.height = 48.0f;
-        UINavigationBar *userViewNav = [[UINavigationBar alloc] initWithFrame: rect];
-	userViewNavItem = [[UINavigationItem alloc] initWithTitle:@"History"];
-        [userViewNav pushNavigationItem: userViewNavItem];
-        [userViewNav showButtonsWithLeftTitle:@"Back" rightTitle: @"Reply" leftBack: YES];
-        [userViewNav setDelegate: self];
-        [userViewNav setBarStyle: 0];
-
-        rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 0.0f);
-        UIView *mainView = [[UIView alloc] initWithFrame: rect];
-
-        rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 48.0f);
-        rect.size.height -= 16;
-        userText = [[UITextView alloc] initWithFrame: rect];
-
-	[userText setEditable:NO];
-	[userText setTextSize:14];
-	[userText setText:@""];
-
-        [mainView addSubview: userText];
-        [mainView addSubview: userViewNav];
-
-        return mainView;
+	[transitionView transition: 2 fromView: userView toView: usersView];
+	currPage = usersView;
+	currBuddy = nil;
+    }
+    
+    -(void)switchFromUserViewToNewMessage
+    {
+	[transitionView transition: 1 fromView: userView toView: newMsg];
+	currPage = newMsg;
     }
 
     -(id)UsersView
@@ -647,7 +615,7 @@ int buddy_compare_status(id left, id right, void * context)
 	
 	myPrefs   = [[MyPrefs alloc] initPrefs];
         usersView = [self UsersView];
-        userView  = [self UserView];
+        userView  = [[UserView alloc] init];
         newMsg    = [[NewMessage alloc] init];
 
 	image_online  = [UIImage applicationImageNamed: @"available.png"];

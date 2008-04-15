@@ -25,7 +25,7 @@ LDFLAGS_FRAMEWORKSDIR=-F/opt/iphone-sdk/share/heavenly/System/Library/
 all:	$(TARGET)
 
 OBJS = lib/connwrap/connwrap.o lib/server.o lib/socket.o lib/utf8.o lib/utils.o lib/conf.o
-APPOBJS = main.o iCabberApp.o iCabberView.o MyPrefs.o NewMessage.o Buddy.o Notifications.o EyeCandy.o BuddyAction.o
+APPOBJS = main.o iCabberApp.o iCabberView.o MyPrefs.o UserView.o NewMessage.o Buddy.o Notifications.o EyeCandy.o BuddyAction.o
 
 $(TARGET):  version.h $(APPOBJS) $(OBJS)
 	$(LD) $(LDFLAGS_FRAMEWORKSDIR) $(LDFLAGS) -o $@ $^
