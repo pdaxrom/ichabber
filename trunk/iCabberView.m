@@ -333,20 +333,6 @@ int buddy_compare_status(id left, id right, void * context)
 		currBuddy = nil;
         	NSLog(@"2-1");
 	    }
-	} else if (currPage == newMsg) {
-	    if (button == 0) {
-        	NSLog(@"pre3-2");
-		[self sendMessage:[replyText text]];
-
-		[transitionView transition: 2 fromView: newMsg toView: userView];
-		currPage = userView;
-		[replyText setText:@""];
-        	NSLog(@"3-2");
-	    } else if (button == 1) {
-		[transitionView transition: 2 fromView: newMsg toView: userView];
-		currPage = userView;
-        	NSLog(@"3-2");
-	    }
 	}
     }
 
@@ -380,40 +366,10 @@ int buddy_compare_status(id left, id right, void * context)
 	[self updateAppBadge];
     }
 
-    -(id)NewMsg
+    -(void)switchFromNewMessageToUserView
     {
-        struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 0.0f);
-        rect.size.height = 48.0f;
-        UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
-        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"New message"]];
-        [nav showButtonsWithLeftTitle:@"Back" rightTitle: @"Send" leftBack: YES];
-        [nav setDelegate: self];
-        [nav setBarStyle: 0];
-
-        rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 0.0f);
-        UIView *mainView = [[UIView alloc] initWithFrame: rect];
-
-        rect = [UIHardware fullScreenApplicationContentRect];
-        rect.origin = CGPointMake (0.0f, 48.0f);
-        rect.size.height -= (245 + 16);
-        replyText = [[UITextView alloc] initWithFrame: rect];
-
-	[replyText setTextSize:14];
-	[replyText setText:@""];
-
-	[UIKeyboard initImplementationNow];
-	UIKeyboard *keyboard = [[UIKeyboard alloc] initWithFrame: CGRectMake(0.0f, 245.0f,
-							      320.0f, 480.0f - 245.f - 16.f)];
-
-        [mainView addSubview: replyText];
-	[mainView addSubview: keyboard];
-        [mainView addSubview: nav];
-
-	[replyText becomeFirstResponder];
-
-        return mainView;
+	[transitionView transition: 2 fromView: newMsg toView: userView];
+	currPage = userView;
     }
 
     -(id)UserView
@@ -689,10 +645,10 @@ int buddy_compare_status(id left, id right, void * context)
         
 	[self addSubview: transitionView];
 	
-	myPrefs= [[MyPrefs alloc] initPrefs];
+	myPrefs   = [[MyPrefs alloc] initPrefs];
         usersView = [self UsersView];
         userView  = [self UserView];
-        newMsg    = [self NewMsg];
+        newMsg    = [[NewMessage alloc] init];
 
 	image_online  = [UIImage applicationImageNamed: @"available.png"];
 	image_away    = [UIImage applicationImageNamed: @"away.png"];
