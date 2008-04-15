@@ -380,7 +380,7 @@ int buddy_compare_status(id left, id right, void * context)
         rect.size.height = 48.0f;
         UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
         [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:NSLocalizedString(@"Buddies", @"Buddies")]];
-        [nav showButtonsWithLeftTitle:NSLocalizedString(@"Logoff", @"Logoff") rightTitle:NSLocalizedString(@"User", @"User") leftBack: YES];
+        [nav showButtonsWithLeftTitle:NSLocalizedString(@"Logoff", @"Logoff") rightTitle:NSLocalizedString(@"Menu", @"Menu") leftBack: YES];
         [nav setDelegate: self];
         [nav setBarStyle: 0];
 
