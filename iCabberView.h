@@ -13,6 +13,7 @@
 #import <Message/NetworkController.h>
 
 #import "MyPrefs.h"
+#import "NewMessage.h"
 #import "Buddy.h"
 #import "EyeCandy.h"
 
@@ -20,10 +21,12 @@
 
 @interface iCabberView : UIView {
     UITransitionView *transitionView;
+
     MyPrefs *myPrefs;
     UIView *usersView;
     UIView *userView;
-    UIView *newMsg;
+    NewMessage *newMsg;
+    
     UITable *usersTable;
     NSTimer *myTimer;
     UIView *currPage;
@@ -61,6 +64,10 @@
 
 - (void)loginMyAccount;
 - (void)logoffMyAccount;
+
+- (void)sendMessage:(NSString *) msg;
+
+- (void)switchFromNewMessageToUserView;
 
 - (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor;
 - (Buddy *)getBuddy:(NSString *) jid;
