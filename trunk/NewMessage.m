@@ -18,15 +18,14 @@
 
         rect = [UIHardware fullScreenApplicationContentRect];
         rect.origin = CGPointMake (0.0f, 48.0f);
-        rect.size.height -= (245 + 16);
+        rect.size.height = (245 - 48);
         replyText = [[UITextView alloc] initWithFrame: rect];
 
 	[replyText setTextSize:14];
 	[replyText setText:@""];
 
 	[UIKeyboard initImplementationNow];
-	UIKeyboard *keyboard = [[UIKeyboard alloc] initWithFrame: CGRectMake(0.0f, 245.0f,
-							      320.0f, 480.0f - 245.f - 16.f)];
+	keyboard = [[UIKeyboard alloc] initWithFrame: CGRectMake(0.0f, 245.0f, 320.0f, 235.0f)];
 
         [self addSubview: replyText];
 	[self addSubview: keyboard];
@@ -35,6 +34,14 @@
 	[replyText becomeFirstResponder];
 
 	return self;
+    }
+
+    -(void)updateView {
+	[replyText removeFromSuperview];
+	[keyboard removeFromSuperview];
+	[self addSubview: replyText];
+	[self addSubview: keyboard];
+	[replyText becomeFirstResponder];
     }
 
     -(void) navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {

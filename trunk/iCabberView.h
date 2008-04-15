@@ -73,6 +73,8 @@
 - (Buddy *)getBuddy:(NSString *) jid;
 - (void)updateUsersTable;
 
+- (void)updateAfterResume;
+
 + (id)initSharedInstanceWithFrame:(CGRect) rect;
 + (id)sharedInstance;
 

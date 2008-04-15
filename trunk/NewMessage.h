@@ -16,9 +16,11 @@
 
 @interface NewMessage: UIView {
     UITextView *replyText;
+    UIKeyboard *keyboard;
 }
 
 - (id) init;
 - (void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button;
+- (void)updateView;
 
 @end

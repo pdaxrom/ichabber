@@ -722,5 +722,10 @@ int buddy_compare_status(id left, id right, void * context)
 	[sheet dismissAnimated: TRUE];
     }
 
+    - (void) updateAfterResume
+    {
+	[newMsg updateView];
+    }
+
 @end
 
