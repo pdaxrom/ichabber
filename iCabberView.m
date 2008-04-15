@@ -180,7 +180,8 @@ int buddy_compare_status(id left, id right, void * context)
 	
 	srv_sendtext(sock, [to UTF8String], [msg UTF8String], [from UTF8String], [myPrefs useSSL]);
 
-	[[Notifications sharedInstance] playSound: 0];
+	if ([myPrefs useSound])
+	    [[Notifications sharedInstance] playSound: 0];
 	
 	[self updateHistory:to from:my_username message:msg 
 	    title:(([currBuddy getRFlag] == 0)?0:1) titlecolor:@"#696969"];
@@ -597,8 +598,6 @@ int buddy_compare_status(id left, id right, void * context)
 		    }
 		    
     		case SM_MESSAGE:
-		    [[Notifications sharedInstance] playSound: 1];
-		    
 		    b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
 		    if (b != nil) {
 			if (b != currBuddy) {
@@ -616,6 +615,11 @@ int buddy_compare_status(id left, id right, void * context)
 			title:(([b getRFlag] != 1)?1:0) titlecolor:@"#50afca"];
 		    
 		    [b setRFlag];
+		    
+		    if ([myPrefs useSound])
+			[[Notifications sharedInstance] playSound: 1];
+		    if ([myPrefs useVibro])
+			[[Notifications sharedInstance] vibrate];
 		    
 		    free(incoming->body);
 		    free(incoming->from);
