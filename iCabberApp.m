@@ -11,6 +11,7 @@
     }
 
     -(void)applicationResume:(GSEvent *)event {
+	    [[iCabberView sharedInstance] updateAfterResume];
     }
 
     -(void)applicationExited:(GSEvent *)event {
