@@ -279,7 +279,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    } else {
 		NSLog(@"Can't login to server");
 		/* handle login error here */
-		    [eyeCandy showStandardAlertWithString:@"Error!"
+		    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 			closeBtnTitle:@"Ok" 
 			withError:NSLocalizedString(@"Unable to login. Check your username and password.", @"Login problem")
 		    ];
@@ -288,7 +288,7 @@ int buddy_compare_status(id left, id right, void * context)
 	} else {
 	    NSLog(@"Can't connect to server");
 	    /* handle connection error here */
-	    	[eyeCandy showStandardAlertWithString:@"Error!"
+	    	[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 		    closeBtnTitle:@"Ok" 
 		    withError:NSLocalizedString(@"Unable to connect to remote server. Check your network settings and try again.", @"Connection problem")
 		];
