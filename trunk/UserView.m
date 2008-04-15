@@ -13,7 +13,7 @@
         UINavigationBar *userViewNav = [[UINavigationBar alloc] initWithFrame: rect];
 	userViewNavItem = [[UINavigationItem alloc] initWithTitle:@"History"];
         [userViewNav pushNavigationItem: userViewNavItem];
-        [userViewNav showButtonsWithLeftTitle:@"Back" rightTitle: @"Reply" leftBack: YES];
+        [userViewNav showButtonsWithLeftTitle:NSLocalizedString(@"Back", @"Back") rightTitle:NSLocalizedString(@"Reply", @"Reply") leftBack: YES];
         [userViewNav setDelegate: self];
         [userViewNav setBarStyle: 0];
 
