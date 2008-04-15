@@ -11,8 +11,8 @@
 	rect.origin.y = 0;
         rect.size.height = 48.0f;
         UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
-        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"New message"]];
-        [nav showButtonsWithLeftTitle:@"Back" rightTitle: @"Send" leftBack: YES];
+        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:NSLocalizedString(@"New message", @"New message")]];
+        [nav showButtonsWithLeftTitle:NSLocalizedString(@"Back", @"Back") rightTitle:NSLocalizedString(@"Send", @"Send") leftBack: YES];
         [nav setDelegate: self];
         [nav setBarStyle: 0];
 

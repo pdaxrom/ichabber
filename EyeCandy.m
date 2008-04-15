@@ -34,8 +34,8 @@
 	[alert setTitle: title];
 	[alert setBodyText: string];
 	[alert setContext: context];
-	[alert addButtonWithTitle:@"YES"];
-	[alert setDestructiveButton: [alert addButtonWithTitle:@"NO"]];
+	[alert addButtonWithTitle:NSLocalizedString(@"YES", @"YES")];
+	[alert setDestructiveButton: [alert addButtonWithTitle:NSLocalizedString(@"NO", @"NO")]];
 	[alert setDelegate: delegate];
 	[alert setAlertSheetStyle: style];
 	[alert popupAlertAnimated: TRUE];

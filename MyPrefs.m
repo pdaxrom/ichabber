@@ -19,13 +19,13 @@
 	rect.origin.y = 0;
         rect.size.height = 48.0f;
         UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
-        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"Account"]];
+        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:NSLocalizedString(@"Account", @"Account")]];
 
         // 0 = greay
         // 1 = red
         // 2 = left arrow
         // 3 = blue
-        [nav showLeftButton:@"About" withStyle:3 rightButton:@"Login" withStyle:3];
+        [nav showLeftButton:NSLocalizedString(@"About", @"About") withStyle:3 rightButton:NSLocalizedString(@"Login", @"Login") withStyle:3];
 
         [nav setDelegate: self];
 	[nav setAutoresizesSubviews: YES];
@@ -33,79 +33,79 @@
 	[self addSubview: nav];
 
 	_username = [[UIPreferencesTextTableCell alloc] init];
-	[_username setTitle:@"Username"];
+	[_username setTitle:NSLocalizedString(@"Username", @"User")];
 	[_username setValue:@""];
 	[[_username textField] setAutoCapsType:0];
 
 	_password = [[UIPreferencesTextTableCell alloc] init];
-	[_password setTitle:@"Password"];
+	[_password setTitle:NSLocalizedString(@"Password", @"Password")];
 	[_password setValue:@""];
 	[[_password textField] setSecure:YES];
 
 	_use_gtalk = [[UIPreferencesControlTableCell alloc] init];
-	[_use_gtalk setTitle:@"Google Talk"];
+	[_use_gtalk setTitle:NSLocalizedString(@"Google Talk", @"GTalk")];
 	UISwitchControl *switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[switchControl addTarget:self action:@selector(changeSwitch) forEvents:(0xf00)];
 	[_use_gtalk setControl:switchControl];
 	[switchControl release];
 
 	_server = [[UIPreferencesTextTableCell alloc] init];
-	[_server setTitle:@"Server"];
+	[_server setTitle:NSLocalizedString(@"Server", @"Server")];
 	[_server setValue:@""];
 	[[_server textField] setAutoCapsType:0];
 
 	_port = [[UIPreferencesTextTableCell alloc] init];
-	[_port setTitle:@"Port"];
+	[_port setTitle:NSLocalizedString(@"Port", @"Port")];
 	[_port setValue:@""];
 	[[_port textField] setAutoCapsType:0];
 
 	_use_ssl = [[UIPreferencesControlTableCell alloc] init];
-	[_use_ssl setTitle:@"SSL"];
+	[_use_ssl setTitle:NSLocalizedString(@"SSL", @"SSL")];
 	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[_use_ssl setControl:switchControl];
 	[switchControl release];
 
 	_use_ssl_verify = [[UIPreferencesControlTableCell alloc] init];
-	[_use_ssl_verify setTitle:@"SSL verify"];
+	[_use_ssl_verify setTitle:NSLocalizedString(@"SSL verify", @"SSL verify")];
 	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[_use_ssl_verify setControl:switchControl];
 	[switchControl release];
 
 	_proxy_enable = [[UIPreferencesControlTableCell alloc] init];
-	[_proxy_enable setTitle:@"Proxy"];
+	[_proxy_enable setTitle:NSLocalizedString(@"Proxy", @"Proxy")];
 	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[switchControl addTarget:self action:@selector(changeSwitch) forEvents:(0xf00)];
 	[_proxy_enable setControl:switchControl];
 	[switchControl release];
 
 	_proxy_host = [[UIPreferencesTextTableCell alloc] init];
-	[_proxy_host setTitle:@"Server"];
+	[_proxy_host setTitle:NSLocalizedString(@"Server", @"Server")];
 	[_proxy_host setValue:@""];
 	[[_proxy_host textField] setAutoCapsType:0];
 
 	_proxy_port = [[UIPreferencesTextTableCell alloc] init];
-	[_proxy_port setTitle:@"Port"];
+	[_proxy_port setTitle:NSLocalizedString(@"Port", @"Port")];
 	[_proxy_port setValue:@""];
 	[[_proxy_port textField] setAutoCapsType:0];
 
 	_proxy_username = [[UIPreferencesTextTableCell alloc] init];
-	[_proxy_username setTitle:@"Username"];
+	[_proxy_username setTitle:NSLocalizedString(@"Username", @"User")];
 	[_proxy_username setValue:@""];
 	[[_proxy_username textField] setAutoCapsType:0];
 
 	_proxy_password = [[UIPreferencesTextTableCell alloc] init];
-	[_proxy_password setTitle:@"Password"];
+	[_proxy_password setTitle:NSLocalizedString(@"Password", @"Password")];
 	[_proxy_password setValue:@""];
 	[[_proxy_password textField] setSecure:YES];
 
 	_sound_enable = [[UIPreferencesControlTableCell alloc] init];
-	[_sound_enable setTitle:@"Sound Alerts"];
+	[_sound_enable setTitle:NSLocalizedString(@"Sound Alerts", @"Sound")];
 	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[_sound_enable setControl:switchControl];
 	[switchControl release];
 
 	_vibro_enable = [[UIPreferencesControlTableCell alloc] init];
-	[_vibro_enable setTitle:@"Vibro Alerts"];
+	[_vibro_enable setTitle:NSLocalizedString(@"Vibro Alerts", @"Vibro")];
 	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
 	[_vibro_enable setControl:switchControl];
 	[switchControl release];
@@ -467,7 +467,7 @@
 	} else if (button == 1) {
 	    [eyeCandy showAlertWithTitle:@"iChabber "APP_VERSION
 		closeBtnTitle:@"Ok" 
-		withText:@"Simple gtalk/jabber client for the ipod touch and iphone.\n2008 (c) sashz <sashz@pdaXrom.org>"
+		withText:NSLocalizedString(@"Simple gtalk/jabber client for the ipod touch and iphone.\n2008 (c) sashz <sashz@pdaXrom.org>", @"About")
 		andStyle:2];
 	}
     }

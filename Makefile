@@ -2,6 +2,8 @@ TARGET = iChabber
 
 VERSION := r`unset LC_ALL ; svn info | grep Revision | cut -f2 -d':' | sed 's/ //g'`
 
+LANGUAGES=$(wildcard *.lproj)
+
 CC = arm-apple-darwin-gcc
 
 LD = $(CC)
@@ -23,6 +25,9 @@ LDFLAGS	= -ObjC -lobjc \
 LDFLAGS_FRAMEWORKSDIR=-F/opt/iphone-sdk/share/heavenly/System/Library/
 
 all:	$(TARGET)
+
+genlocalestr:
+	genstrings -aq -o English.lproj/ *.m
 
 OBJS = lib/connwrap/connwrap.o lib/server.o lib/socket.o lib/utf8.o lib/utils.o lib/conf.o
 APPOBJS = main.o iCabberApp.o iCabberView.o MyPrefs.o UserView.o NewMessage.o Buddy.o Notifications.o EyeCandy.o BuddyAction.o
@@ -50,6 +55,10 @@ package: $(TARGET)
 	cp Info.plist $(TARGET).app/Info.plist
 	cp icons/*.png $(TARGET).app/
 	cp sounds/*.aiff $(TARGET).app/
+	for i in $(LANGUAGES); do \
+	    mkdir -p $(TARGET).app/$$i; \
+	    cp $$i/Localizable.strings $(TARGET).app/$$i; \
+	done
 
 dist: package
 	zip -9r $(TARGET)-$(VERSION).zip $(TARGET).app/

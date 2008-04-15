@@ -281,7 +281,8 @@ int buddy_compare_status(id left, id right, void * context)
 		/* handle login error here */
 		    [eyeCandy showStandardAlertWithString:@"Error!"
 			closeBtnTitle:@"Ok" 
-			withError:@"Unable to login. Check your username and password."];
+			withError:NSLocalizedString(@"Unable to login. Check your username and password.", @"Login problem")
+		    ];
 		return;
 	    }
 	} else {
@@ -289,7 +290,8 @@ int buddy_compare_status(id left, id right, void * context)
 	    /* handle connection error here */
 	    	[eyeCandy showStandardAlertWithString:@"Error!"
 		    closeBtnTitle:@"Ok" 
-		    withError:@"Unable to connect to remote server. Check your network settings and try again."];
+		    withError:NSLocalizedString(@"Unable to connect to remote server. Check your network settings and try again.", @"Connection problem")
+		];
 	    return;
 	}
 	[transitionView transition: 1 fromView: myPrefs toView: usersView];
@@ -377,8 +379,8 @@ int buddy_compare_status(id left, id right, void * context)
         rect.origin = CGPointMake (0.0f, 0.0f);
         rect.size.height = 48.0f;
         UINavigationBar *nav = [[UINavigationBar alloc] initWithFrame: rect];
-        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:@"Buddies"]];
-        [nav showButtonsWithLeftTitle:@"Logoff" rightTitle: @"User" leftBack: YES];
+        [nav pushNavigationItem: [[UINavigationItem alloc] initWithTitle:NSLocalizedString(@"Buddies", @"Buddies")]];
+        [nav showButtonsWithLeftTitle:NSLocalizedString(@"Logoff", @"Logoff") rightTitle:NSLocalizedString(@"User", @"User") leftBack: YES];
         [nav setDelegate: self];
         [nav setBarStyle: 0];
 
@@ -505,8 +507,9 @@ int buddy_compare_status(id left, id right, void * context)
 
 		case SM_SUBSCRIBE: {
 		    NSString *jid = [NSString stringWithUTF8String: incoming->from];
-		    [eyeCandy showAlertYesNoWithTitle:@"Request received" 
-			      withText:[NSString stringWithFormat:@"Do you want to add user %@ to buddies?", jid] 
+		    [eyeCandy showAlertYesNoWithTitle:NSLocalizedString(@"Request received", @"Request received") 
+			      withText:[NSString stringWithFormat:NSLocalizedString(@"Do you want to add user %@ to buddies?", @"Accept new buddy"),
+			    		jid] 
 			      andStyle:2
 			      andDelegate:self
 			      andContext:[[BuddyAction alloc] initWithBuddy:jid andAction:BUDDYACTION_UNSUBSCRIBE]];
@@ -551,9 +554,9 @@ int buddy_compare_status(id left, id right, void * context)
 
 		case SM_STREAMERROR:
 		    [self logoffMyAccount];
-		    [eyeCandy showStandardAlertWithString:@"Error!"
+		    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 			    closeBtnTitle:@"Ok" 
-			    withError:@"Stream error. Check your network and try connect again."];
+			    withError:NSLocalizedString(@"Stream error. Check your network and try connect again.", @"Stream error")];
 		    break;
 
     		case SM_UNHANDLED:
@@ -572,9 +575,9 @@ int buddy_compare_status(id left, id right, void * context)
 	    
 	    if (errno != EINTR) {
 		[self logoffMyAccount];
-		[eyeCandy showStandardAlertWithString:@"Error!"
+		[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 			closeBtnTitle:@"Ok" 
-			withError:@"Socket error. Check your network and try connect again."];
+			withError:NSLocalizedString(@"Socket error. Check your network and try connect again.", @"Socket error")];
 		return;
 	    }
 	}
@@ -587,9 +590,9 @@ int buddy_compare_status(id left, id right, void * context)
 	} else if (!ping_counter) {
 	    NSLog(@"BUMS! Network offline!");
 	    [self logoffMyAccount];
-	    [eyeCandy showStandardAlertWithString:@"Error!"
+	    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 		    closeBtnTitle:@"Ok" 
-		    withError:@"Unable to get a response from remote server. Check your network and try connect again."];
+		    withError:NSLocalizedString(@"Unable to get a response from remote server. Check your network and try connect again.", @"Timeout")];
 	    return;
 	}
     }
