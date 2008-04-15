@@ -9,6 +9,7 @@
 #import "Notifications.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <time.h>
 
 extern void * _CTServerConnectionCreate(CFAllocatorRef, int (*)(void *, CFStringRef, CFDictionaryRef, void *), int *);
@@ -114,8 +115,9 @@ int vibratecallback(void *connection, CFStringRef string, CFDictionaryRef dictio
 	int x;
 	void* connection = _CTServerConnectionCreate(kCFAllocatorDefault, &vibratecallback, &x);
 	_CTServerConnectionSetVibratorState(&x, connection, 3, 10.0, 10.0, 10.0, 10.0);
-	time_t now = time(NULL);
-	while (time(NULL) - now < 0.5) { }
+	//clock_t now = clock();
+	//while (clock() - now < (CLOCKS_PER_SEC >> 1)) { }
+	usleep(500000);
 	_CTServerConnectionSetVibratorState(&x, connection, 0, 10.0, 10.0, 10.0, 10.0);
 	_isVibrating = NO;
 	[p release];

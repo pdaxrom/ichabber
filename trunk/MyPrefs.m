@@ -5,6 +5,10 @@
 #define DEFAULT_PROXY_PORT 3124
 
 @implementation MyPrefs
+    -(void)changeSwitch {
+	NSLog(@"rere");
+	[table reloadData];
+    }
 
     -(id)initPrefs
     {
@@ -41,6 +45,7 @@
 	_use_gtalk = [[UIPreferencesControlTableCell alloc] init];
 	[_use_gtalk setTitle:@"Google Talk"];
 	UISwitchControl *switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[switchControl addTarget:self action:@selector(changeSwitch) forEvents:(0xf00)];
 	[_use_gtalk setControl:switchControl];
 	[switchControl release];
 
@@ -69,6 +74,7 @@
 	_proxy_enable = [[UIPreferencesControlTableCell alloc] init];
 	[_proxy_enable setTitle:@"Proxy"];
 	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[switchControl addTarget:self action:@selector(changeSwitch) forEvents:(0xf00)];
 	[_proxy_enable setControl:switchControl];
 	[switchControl release];
 
@@ -91,6 +97,18 @@
 	[_proxy_password setTitle:@"Password"];
 	[_proxy_password setValue:@""];
 	[[_proxy_password textField] setSecure:YES];
+
+	_sound_enable = [[UIPreferencesControlTableCell alloc] init];
+	[_sound_enable setTitle:@"Sound Alerts"];
+	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[_sound_enable setControl:switchControl];
+	[switchControl release];
+
+	_vibro_enable = [[UIPreferencesControlTableCell alloc] init];
+	[_vibro_enable setTitle:@"Vibro Alerts"];
+	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[_vibro_enable setControl:switchControl];
+	[switchControl release];
 
         rect = [UIHardware fullScreenApplicationContentRect];
         rect.origin = CGPointMake (0.0f, 48.0f);
@@ -178,7 +196,24 @@
 		[sw setValue:0.0f];
 	}
 
+	if (readconf(conf, "sound_enabled", data)) {
+	    UISwitchControl* sw = [_sound_enable control];
+	    if (!strcmp(data, "yes"))
+		[sw setValue:1.0f];
+	    else
+		[sw setValue:0.0f];
+	}
+
+	if (readconf(conf, "vibro_enabled", data)) {
+	    UISwitchControl* sw = [_vibro_enable control];
+	    if (!strcmp(data, "yes"))
+		[sw setValue:1.0f];
+	    else
+		[sw setValue:0.0f];
+	}
+
 #undef _STR
+	[table reloadData];
     }
     
     - (void)saveConfig {
@@ -209,6 +244,11 @@
 
 	sw = [_proxy_enable control];
 	writeconf(conf, "proxy_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
+
+	sw = [_sound_enable control];
+	writeconf(conf, "sound_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
+	sw = [_vibro_enable control];
+	writeconf(conf, "vibro_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
 
 #undef _G
     }
@@ -320,6 +360,24 @@
 	return [[_proxy_password textField] text];
     }
 
+    - (int) useSound
+    {
+	UISwitchControl* sw = [_sound_enable control];
+	if ([sw value] == 1.0f)
+	    return 1;
+	else
+	    return 0;
+    }
+
+    - (int) useVibro;
+    {
+	UISwitchControl* sw = [_vibro_enable control];
+	if ([sw value] == 1.0f)
+	    return 1;
+	else
+	    return 0;
+    }
+
     - (void)tableRowSelected:(NSNotification *)notification
     {
 	//NSLog(@"selected row %d %s\n", [table selectedRow], [[[_username textField] text] UTF8String]);
@@ -329,16 +387,21 @@
 
     - (int)numberOfGroupsInPreferencesTable:(UIPreferencesTable *)table
     {
-	return 2;
+	return 3;
     }
 
     - (int)preferencesTable:(UIPreferencesTable *)table numberOfRowsInGroup:(int)group
     {
+	UISwitchControl* sw;
 	switch (group) {
 	    case 0:
-		return 5;
+		sw = [_use_gtalk control];
+		return ([sw value] == 0.0f)?5:3;
 	    case 1:
-		return 5;
+		sw = [_proxy_enable control];
+		return ([sw value] == 0.0f)?1:5;
+	    case 2:
+		return 2;
 	}
     }
 
@@ -380,6 +443,13 @@
 		return _proxy_username;
 	    case 4:
 		return _proxy_password;
+	    }
+	} else if (group == 2) {
+	    switch(row) {
+	    case 0:
+		return _sound_enable;
+	    case 1:
+		return _vibro_enable;
 	    }
 	}
 	return nil;

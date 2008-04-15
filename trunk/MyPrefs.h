@@ -12,6 +12,7 @@
 #import <UIKit/UIPreferencesControlTableCell.h>
 #import <UIKit/UIPreferencesDeleteTableCell.h>
 #import <UIKit/UISwitchControl.h>
+#import <UIKit/UIControl.h>
 
 #import "EyeCandy.h"
 #import "version.h"
@@ -38,6 +39,9 @@
     UIPreferencesTextTableCell *_proxy_password;
     
     UIPreferencesControlTableCell *_proxy_enable;
+
+    UIPreferencesControlTableCell *_sound_enable;
+    UIPreferencesControlTableCell *_vibro_enable;
     
     NSString *dirPath;
 }
@@ -63,6 +67,9 @@
 - (int) getProxyPort;
 - (NSString *) getProxyUser;
 - (NSString *) getProxyPassword;
+
+- (int) useSound;
+- (int) useVibro;
 
 - (void)tableRowSelected:(NSNotification *)notification;
 
