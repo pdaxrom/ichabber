@@ -17,6 +17,7 @@
 #import "NewMessage.h"
 #import "Buddy.h"
 #import "EyeCandy.h"
+#import "IconSet.h"
 
 #define MAX_USERLOG_SIZE 2048
 
@@ -37,14 +38,8 @@
     // Buddy
     Buddy *currBuddy;
 
-    //Images
-    UIImage *image_online;
-    UIImage *image_away;
-    UIImage *image_xaway;
-    UIImage *image_dnd;
-    UIImage *image_chat;
-    UIImage *image_offline;
-    UIImage *image_content;
+    // Icons
+    IconSet *is;
     
     // Network variables
     int sock;

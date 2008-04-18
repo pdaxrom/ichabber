@@ -2,6 +2,7 @@
 #import "Buddy.h"
 #import "BuddyAction.h"
 #import "Notifications.h"
+#import "IconSet.h"
 #import <sys/stat.h>
 #import <unistd.h>
 #import "lib/server.h"
@@ -425,23 +426,26 @@ int buddy_compare_status(id left, id right, void * context)
 	[cell setShowDisclosure:YES];
 
 	if ([buddy getMsgCounter]) {
-	    [cell setImage: image_content];
+	    [cell setImage: [is getIcon:ICON_CONTENT]];
 	} else {
 	    int status = [buddy getStatus];
 	    
 	    if (!status)
-		[cell setImage: image_offline];
+		[cell setImage: [is getIcon:ICON_OFFLINE]];
 	    else if (status & FLAG_BUDDY_CHAT)
-		[cell setImage: image_chat];
+		[cell setImage: [is getIcon:ICON_CHAT]];
 	    else if (status & FLAG_BUDDY_DND)
-		[cell setImage: image_dnd];
+		[cell setImage: [is getIcon:ICON_DND]];
 	    else if (status & FLAG_BUDDY_XAWAY)
-		[cell setImage: image_xaway];
+		[cell setImage: [is getIcon:ICON_XAWAY]];
 	    else if (status & FLAG_BUDDY_AWAY)
-		[cell setImage: image_away];
+		[cell setImage: [is getIcon:ICON_AWAY]];
 	    else
-		[cell setImage: image_online];
+		[cell setImage: [is getIcon:ICON_ONLINE]];
 	}
+	
+//	[cell addSubview: [is getIconForJID: [buddy getName]]];
+	
 	return [cell autorelease];
     }
 
@@ -621,13 +625,7 @@ int buddy_compare_status(id left, id right, void * context)
         userView  = [[UserView alloc] init];
         newMsg    = [[NewMessage alloc] init];
 
-	image_online  = [UIImage applicationImageNamed: @"available.png"];
-	image_away    = [UIImage applicationImageNamed: @"away.png"];
-	image_xaway   = [UIImage applicationImageNamed: @"xaway.png"];
-	image_dnd     = [UIImage applicationImageNamed: @"dnd.png"];
-	image_chat    = [UIImage applicationImageNamed: @"chat.png"];
-	image_offline = [UIImage applicationImageNamed: @"offline.png"];
-	image_content = [UIImage applicationImageNamed: @"content.png"];
+	is = [IconSet initSharedInstance];
 
 	currBuddy = nil;
 	currPage  = myPrefs;

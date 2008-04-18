@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>About</key>
+	<string>A propos</string>
+	<key>Account</key>
+	<string>Compte</string>
+	<key>Back</key>
+	<string>Préc.</string>
+	<key>Buddies</key>
+	<string>Ami(e)s</string>
+	<key>Do you want to add user %@ to buddies?</key>
+	<string>Voulez vous ajouter %@ à vos amis?</string>
+	<key>Error!</key>
+	<string>Erreur!</string>
+	<key>Google Talk</key>
+	<string>Google Talk</string>
+	<key>Login</key>
+	<string>Connexion</string>
+	<key>Logoff</key>
+	<string>Déconnexion</string>
+	<key>Menu</key>
+	<string>Menu</string>
+	<key>NO</key>
+	<string>Non</string>
+	<key>New message</key>
+	<string>Nouveau Message</string>
+	<key>Password</key>
+	<string>Mot de Passe</string>
+	<key>Port</key>
+	<string>Port</string>
+	<key>Proxy</key>
+	<string>Proxy</string>
+	<key>Reply</key>
+	<string>Réponse</string>
+	<key>Request received</key>
+	<string>Requête reçue</string>
+	<key>SSL</key>
+	<string>SSL</string>
+	<key>SSL verify</key>
+	<string>SSL verifié</string>
+	<key>Send</key>
+	<string>Envoyer</string>
+	<key>Server</key>
+	<string>Serveur</string>
+	<key>Simple gtalk/jabber client for the ipod touch and iphone.
+2008 (c) sashz &lt;sashz@pdaXrom.org&gt;</key>
+	<string>Client simplifié pour gtalk/jabbersur ipod touch et iphone.
+2008 © sashz &lt;sashz@pdaXrom.org&gt;</string>
+	<key>Socket error. Check your network and try connect again.</key>
+	<string>Erreur socket. Vérifiez votre réseau et recommencez.</string>
+	<key>Sound Alerts</key>
+	<string>Alertes Sonores</string>
+	<key>Stream error. Check your network and try connect again.</key>
+	<string>Erreur de Flux. Vérifiez votre réseau et recommencez.</string>
+	<key>Unable to connect to remote server. Check your network settings and try again.</key>
+	<string>Connexion au serveur impossible. Vérifiez vos paramètres réseau et recommencez</string>
+	<key>Unable to get a response from remote server. Check your network and try connect again.</key>
+	<string>Pas de réponse du serveur distant. Vérifiez vos paramètres réseau et recommencez</string>
+	<key>Unable to login. Check your username and password.</key>
+	<string>Connexion impossible. Vérifiez votre pseudo et mot de passe</string>
+	<key>Username</key>
+	<string>Pseudo</string>
+	<key>Vibro Alerts</key>
+	<string>Alertes avec Vibreur</string>
+	<key>YES</key>
+	<string>OUI</string>
+</dict>
+</plist>
