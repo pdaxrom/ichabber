@@ -3,6 +3,7 @@
 #import "BuddyAction.h"
 #import "Notifications.h"
 #import "IconSet.h"
+#import "BuddyCell.h"
 #import <sys/stat.h>
 #import <unistd.h>
 #import "lib/server.h"
@@ -416,36 +417,30 @@ int buddy_compare_status(id left, id right, void * context)
 
     -(UITableCell *) table: (UITable *)table cellForRow: (int)row column: (int)col
     {
-	UIImageAndTextTableCell *cell = [[UIImageAndTextTableCell alloc] init];
-
 	Buddy *buddy = [buddyArray objectAtIndex:row];
-	
 	//NSLog(@"JID %s\n", [[buddy getJID] UTF8String]);
 
-	[cell setTitle:[buddy getName]];
-	[cell setShowDisclosure:YES];
+	BuddyCell *cell = [[BuddyCell alloc] initWithJID:[buddy getJID] andName:[buddy getName]];
 
 	if ([buddy getMsgCounter]) {
-	    [cell setImage: [is getIcon:ICON_CONTENT]];
+	    [cell setStatusImage: ICON_CONTENT];
 	} else {
 	    int status = [buddy getStatus];
 	    
 	    if (!status)
-		[cell setImage: [is getIcon:ICON_OFFLINE]];
+		[cell setStatusImage: ICON_OFFLINE];
 	    else if (status & FLAG_BUDDY_CHAT)
-		[cell setImage: [is getIcon:ICON_CHAT]];
+		[cell setStatusImage: ICON_CHAT];
 	    else if (status & FLAG_BUDDY_DND)
-		[cell setImage: [is getIcon:ICON_DND]];
+		[cell setStatusImage: ICON_DND];
 	    else if (status & FLAG_BUDDY_XAWAY)
-		[cell setImage: [is getIcon:ICON_XAWAY]];
+		[cell setStatusImage: ICON_XAWAY];
 	    else if (status & FLAG_BUDDY_AWAY)
-		[cell setImage: [is getIcon:ICON_AWAY]];
+		[cell setStatusImage: ICON_AWAY];
 	    else
-		[cell setImage: [is getIcon:ICON_ONLINE]];
+		[cell setStatusImage: ICON_ONLINE];
 	}
-	
-//	[cell addSubview: [is getIconForJID: [buddy getName]]];
-	
+
 	return [cell autorelease];
     }
 

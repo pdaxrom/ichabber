@@ -3,9 +3,9 @@
 static id sharedInstanceIcon;
 
 static NSString *file[ICON_MAX] = {
-    @"jabber-small.png",
-    @"gtalk-small.png",
-    @"icq-small.png",
+    @"jabber.png",
+    @"gtalk.png",
+    @"icq.png",
     @"available.png",
     @"away.png",
     @"xaway.png",
