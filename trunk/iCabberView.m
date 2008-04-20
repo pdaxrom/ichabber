@@ -4,6 +4,7 @@
 #import "Notifications.h"
 #import "IconSet.h"
 #import "BuddyCell.h"
+#import "resolveHostname.h"
 #import <sys/stat.h>
 #import <unistd.h>
 #import "lib/server.h"
@@ -55,8 +56,6 @@ int buddy_compare_status(id left, id right, void * context)
     }
     
     - (int)connectToServer {
-	int try = 10; // try connect 10 times
-
 	if(![self hasNetworkConnection]) {
 	    return -1;
 	}
@@ -72,20 +71,16 @@ int buddy_compare_status(id left, id right, void * context)
     	    cw_setproxy(host, port, user, password);
 	} else
 	    cw_setproxy(NULL, 0, NULL, NULL);
+
+	NSString *ipa = resolveHostname([myPrefs getServer]);
+
+	if (ipa == nil)
+	    return -1;
 	
-	while(1) {
-	    NSLog(@"Connection...\n");
-	    if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort], [myPrefs useSSL])) < 0) {
-		NSLog(@"Error conecting to (%@)\n", [myPrefs getServer]);
-		if (try--) {
-		    //wakeup wifi
-		    system("ping -c 1 talk.google.com");
-		    sleep(1);
-		    continue;
-		}
-		return -1;
-	    }
-	    break;
+	NSLog(@"Connection to %@...\n", ipa);
+	if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort], [myPrefs useSSL])) < 0) {
+	    NSLog(@"Error conecting to (%@)\n", [myPrefs getServer]);
+	    return -1;
 	}
 	NSLog(@"Connected.\n");
 	return 0;
