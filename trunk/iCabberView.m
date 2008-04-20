@@ -191,11 +191,11 @@ int buddy_compare_status(id left, id right, void * context)
 	[currBuddy clrRFlag];
     }
 
-    - (void)updateUserView:(NSString *)username {
+    - (void)updateUserView:(Buddy *) buddy {
 	[userView setText:@""];
-	[userView setTitle:username];
+	[userView setTitle:[buddy getName]];
 
-	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
+	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [[buddy getJID] lowercaseString]];
 
 	//NSLog(@"read history %@\n\n", name);
 
@@ -452,7 +452,7 @@ int buddy_compare_status(id left, id right, void * context)
 	
 	Buddy *buddy = [buddyArray objectAtIndex:i];
 
-	[self updateUserView:[buddy getJID]];
+	[self updateUserView:buddy];
 
 	[buddy clrMsgCounter];
 
