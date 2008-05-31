@@ -7,6 +7,7 @@
 	NSString * jid;
 	NSString * name;
 	NSString * group;
+	NSString * statusText;
 	int status;
 	int newmsg;
 	int rflag;
@@ -25,6 +26,10 @@
 - (int) getStatus;
 
 - (void) setStatus:(int) s;
+
+- (NSString*)getStatusText;
+
+- (void)setStatusText:(NSString*)s;
 
 - (void) incMsgCounter;
 

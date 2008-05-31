@@ -421,7 +421,8 @@ int buddy_compare_status(id left, id right, void * context)
 	    [cell setStatusImage: ICON_CONTENT];
 	} else {
 	    int status = [buddy getStatus];
-	    
+		[cell setStatusText: [buddy getStatusText]];
+	
 	    if (!status)
 		[cell setStatusImage: ICON_OFFLINE];
 	    else if (status & FLAG_BUDDY_CHAT)
@@ -487,17 +488,22 @@ int buddy_compare_status(id left, id right, void * context)
 	    
 	    ping_counter = ping_interval;
 	    
-    	    srv_msg *incoming = readserver(sock, [myPrefs useSSL]);
+		srv_msg *incoming = readserver(sock, [myPrefs useSSL]);
 	    
-    	    switch (incoming->m) {
-    		case SM_PRESENCE:
-		    b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
-		    if (b != nil) {
-			[b setStatus:incoming->connected];
-			[self updateUsersTable];
-		    }
-		    free(incoming->from);
-		    break;
+		switch (incoming->m) {
+			case SM_PRESENCE:
+				b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
+				if (b != nil) {
+					[b setStatus:incoming->connected];
+					if(incoming->body) {
+						[b setStatusText: [NSString stringWithUTF8String: incoming->body]];
+						free(incoming->body);
+					}
+					//NSLog(@"status ok");
+					[self updateUsersTable];
+				}
+				free(incoming->from);
+			break;
 
 		case SM_SUBSCRIBE: {
 		    NSString *jid = [NSString stringWithUTF8String: incoming->from];
