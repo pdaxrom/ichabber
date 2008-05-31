@@ -25,10 +25,16 @@
 	    [name_label setText: name];
 	    [name_label setFont: [WebFontCache createFontWithFamily:@"Helvetica" traits:0 size:16]];
 	    [name_label setBackgroundColor: CGColorCreate(colorSpace, transparent)];
+	
+		status_label = [[UITextLabel alloc] initWithFrame: CGRectMake(16, 27, 288, 12)];
+		[status_label setText: @""];
+	    [status_label setFont: [WebFontCache createFontWithFamily:@"Helvetica" traits:0 size:10]];
+	    [status_label setBackgroundColor: CGColorCreate(colorSpace, transparent)];
 
 	    [self addSubview: status_image];
 	    [self addSubview: name_label];
 	    [self addSubview: proto_image];
+		[self addSubview: status_label];
 	}
 	
 	return self;
@@ -36,8 +42,13 @@
 
     - (void) setStatusImage:(int) status
     {
-	[status_image setImage: [[IconSet sharedInstance] getIcon:status]];
+		[status_image setImage: [[IconSet sharedInstance] getIcon:status]];
     }
+
+	- (void) setStatusText:(NSString *) status
+	{
+		[status_label setText: status];
+	}
 
     - (void) dealloc
     {

@@ -408,68 +408,72 @@ srv_msg *readserver(int sock, int ssl)
     //fprintf(stderr, ">>> [%s], [%s], [%s], [%s], [%s], [%s], [%s]\n\n", to, from, id, type, body, status, show);
 
     /* scan for buffer */
-    if (!strncmp(buffer, "<message", 8) && body) {	/* manage messages */
-      msg->m = SM_MESSAGE;
-    } else if (!strncmp(buffer, "<presence", 9)) {	/* manage presences */
-      msg->m = SM_PRESENCE;
-      if (!type) {	/* assume online */
-	msg->connected = FLAG_BUDDY_CONNECTED;
-        if (show) {
-	    if (!strcasecmp(show, "away"))
-		msg->connected |= FLAG_BUDDY_AWAY;
-	    else if (!strcasecmp(show, "xa"))
-		msg->connected |= FLAG_BUDDY_XAWAY;
-	    else if (!strcasecmp(show, "dnd"))
-		msg->connected |= FLAG_BUDDY_DND;
-	    else if (!strcasecmp(show, "chat"))
-		msg->connected |= FLAG_BUDDY_CHAT;
+	if (!strncmp(buffer, "<message", 8) && body) {	/* manage messages */
+		msg->m = SM_MESSAGE;
+	} else if (!strncmp(buffer, "<presence", 9)) {	/* manage presences */
+		msg->m = SM_PRESENCE;
+		if (!type) {	/* assume online */
+			msg->connected = FLAG_BUDDY_CONNECTED;
+			if (show) {
+				if (!strcasecmp(show, "away"))
+					msg->connected |= FLAG_BUDDY_AWAY;
+				else if (!strcasecmp(show, "xa"))
+					msg->connected |= FLAG_BUDDY_XAWAY;
+				else if (!strcasecmp(show, "dnd"))
+					msg->connected |= FLAG_BUDDY_DND;
+				else if (!strcasecmp(show, "chat"))
+					msg->connected |= FLAG_BUDDY_CHAT;
+			}
+		} else if (!strncmp(type, "unavailable", 11)) {	/* offline */
+			msg->connected = 0;
+		} else if (!strcmp(type, "subscribe")) {		/* subscribe request */
+			msg->m = SM_SUBSCRIBE;
+		} else if (!strcmp(type, "unsubscribe")) {	/* unsubscribe request */
+			msg->m = SM_UNSUBSCRIBE;
+		}
+	} else if (!strncmp(buffer, "<stream:error", 9)) {	/* stream error */
+		msg->m = SM_STREAMERROR;
+	} else {
+		msg->m = SM_UNHANDLED;
 	}
-      } else if (!strncmp(type, "unavailable", 11)) {	/* offline */
-	msg->connected = 0;
-      } else if (!strcmp(type, "subscribe")) {		/* subscribe request */
-        msg->m = SM_SUBSCRIBE;
-      } else if (!strcmp(type, "unsubscribe")) {	/* unsubscribe request */
-        msg->m = SM_UNSUBSCRIBE;
-      }
-    } else if (!strncmp(buffer, "<stream:error", 9)) {	/* stream error */
-	msg->m = SM_STREAMERROR;
-    } else {
-      msg->m = SM_UNHANDLED;
-    }
 
-    /* write the parsed buffer */
-    switch (msg->m) {
-    case SM_MESSAGE:
-      {
-	char *aux = strstr(from, "/");
-	if (aux)
-	  *aux = '\0';
-	msg->from = from;
-	msg->body = strdup(body); //utf8_decode(body);
-	ut_WriteLog("+OK [%s]\n", buffer);
-      }
-      break;
+   	/* write the parsed buffer */
+	switch (msg->m) {
+		case SM_MESSAGE:
+		{
+			char *aux = strstr(from, "/");
+			if (aux)
+				*aux = '\0';
+			msg->from = from;
+			msg->body = strdup(body); //utf8_decode(body);
+			ut_WriteLog("+OK [%s]\n", buffer);
+		}
+		break;
 
-    case SM_PRESENCE:
-    case SM_SUBSCRIBE:
-    case SM_UNSUBSCRIBE:
-      {
-	char *aux = strstr(from, "/");
-	if (aux)
-	  *aux = '\0';
-	msg->from = from;
-      }
-      break;
+		case SM_PRESENCE:
+		case SM_SUBSCRIBE:
+		case SM_UNSUBSCRIBE:
+		{
+			char *aux = strstr(from, "/");
+			if (aux)
+				*aux = '\0';
+			msg->from = from;
+			if(status && strlen(status)) {
+				msg->body = strdup(status);
+			} else {
+				msg->body = 0; // XXX: just to be sure
+			}
+		}
+		break;
 
-    case SM_STREAMERROR:
-      ut_WriteLog("Stream error detected\n");
-      break;
+		case SM_STREAMERROR:
+			ut_WriteLog("Stream error detected\n");
+		break;
 
-    case SM_UNHANDLED:
-      ut_WriteLog("BAD [%s]\n", buffer);
-      break;
-
-    }
+		case SM_UNHANDLED:
+			ut_WriteLog("BAD [%s]\n", buffer);
+		break;
+	}
     free(line);
     if (to)
       free(to);

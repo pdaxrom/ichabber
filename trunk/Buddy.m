@@ -7,6 +7,7 @@
 	jid   = [[NSString alloc]initWithString:ajid];
 	name  = [[NSString alloc]initWithString:aname];
 	group = [[NSString alloc]initWithString:agroup];
+	statusText = [[NSString alloc] initWithString:@""];
 	
 	status = 0;
 	newmsg = 0;
@@ -38,9 +39,20 @@
 	return status;
     }
 
+	- (NSString*)getStatusText
+	{
+		return statusText;
+	}
+
     -(void) setStatus:(int) s {
-	status = s;
+		status = s;
     }
+
+	- (void)setStatusText:(NSString*)s
+	{
+		[statusText release];
+		statusText = [[NSString alloc] initWithString:s];
+	}
 
     -(void) incMsgCounter {
 	newmsg++;

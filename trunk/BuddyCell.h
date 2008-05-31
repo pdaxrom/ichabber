@@ -11,12 +11,15 @@
     UIImageView *status_image;
     UIImageView *proto_image;
     UITextLabel *name_label;
+	UITextLabel *status_label;
     //UITextLabel *mesg;
 }
 
 - (id) initWithJID:(NSString *) jid andName:(NSString *) name;
 
 - (void) setStatusImage:(int) status;
+
+- (void) setStatusText:(NSString *) status;
 
 - (void) dealloc;
 
