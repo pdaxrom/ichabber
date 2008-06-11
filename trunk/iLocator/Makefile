@@ -26,7 +26,8 @@ genlocalestr:
 
 APPOBJS = \
 	iLocator.o \
-	iLocatorApp.o
+	iLocatorApp.o \
+	LLData.o
 
 $(TARGET): $(APPOBJS)
 	$(LD) $(LDFLAGS_FRAMEWORKSDIR) $(LDFLAGS) -o $@ $^
