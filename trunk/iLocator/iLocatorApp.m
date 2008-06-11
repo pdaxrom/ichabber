@@ -25,6 +25,30 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
     [super dealloc];
 }
 
+-(void)addLocationWithLat:(double) LAT andLon:(double) LON andDate:(NSDate *) date
+{
+    NSString *_message = [NSString stringWithFormat:@"%@ lat=%f lon=%f\n",
+			    	[date descriptionWithCalendarFormat: 
+				    @"%b %d, %Y %I:%M %p" 
+				    timeZone:nil locale:nil
+				],
+				LAT,
+				LON
+			];
+
+    NSString *name = [[NSString alloc] initWithString:@"/tmp/iLocator.txt"];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:name])
+	[[NSFileManager defaultManager] createFileAtPath:name contents: nil attributes: nil];
+
+    NSFileHandle *outFile = [NSFileHandle fileHandleForUpdatingAtPath:name];
+
+    if (outFile != nil) {
+	    [outFile seekToEndOfFile];
+	    [outFile writeData:[NSData dataWithBytes:[_message UTF8String] length:[_message lengthOfBytesUsingEncoding:NSUTF8StringEncoding]]];
+	    [outFile closeFile];
+    }
+}
+
 -(void)showLocationWithMNC:(int) MNC andMCC:(int) MCC andCID:(int) CID andLAC:(int) LAC
 {	
     char pd[] = {
@@ -117,6 +141,7 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
 	double lat = ((double)((ps[7] << 24) | (ps[8] << 16) | (ps[9] << 8) | (ps[10]))) / 1000000;
 	double lon = ((double)((ps[11] << 24) | (ps[12] << 16) | (ps[13] << 8) | (ps[14]))) / 1000000;
 	NSLog(@"Latitude %f, Longtitude %f\n", lat, lon);
+	[self addLocationWithLat: lat andLon: lon andDate: [[NSDate alloc] init]];
     } else {
 	NSLog(@"opcode1=%04X", opcode1);
 	NSLog(@"opcode2=%02X", opcode1);
