@@ -40,23 +40,42 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
 	    int count = [packet count];
 	    NSLog(@"count=%d", count);
 	    int i;
+	    NSString *_bar = [NSString stringWithFormat:@"-------------------------------\n"];
+	    [outFile writeData:[NSData dataWithBytes:[_bar UTF8String] length:[_bar lengthOfBytesUsingEncoding:NSUTF8StringEncoding]]];
 	    for (i = 0; i < count; i++) {
 		LLData *d = [packet objectAtIndex: i];
-		NSString *_message = [NSString stringWithFormat:@"%@ lat=%f lon=%f\n",
+		NSString *_message;
+		if (([d getLat] < 0) &&
+		    ([d getLon] < 0)) {
+		    _message = [NSString stringWithFormat:@"%@ cid=%d lac=%d mnc=%d mcc=%d rx=%d\n",
 			    	[[d getDate] descriptionWithCalendarFormat: 
-				    @"%b %d, %Y %I:%M %p" 
+				    @"%b %d, %Y %I:%M.%S %p" 
+				    timeZone:nil locale:nil
+				],
+				[d getCid],
+				[d getLac],
+				[d getMNC],
+				[d getMCC],
+				[d getRX]
+			    ];
+		} else {
+		    _message = [NSString stringWithFormat:@"%@ lat=%f lon=%f rx=%d\n",
+			    	[[d getDate] descriptionWithCalendarFormat: 
+				    @"%b %d, %Y %I:%M.%S %p" 
 				    timeZone:nil locale:nil
 				],
 				[d getLat],
-				[d getLon]
-			];
+				[d getLon],
+				[d getRX]
+			    ];
+		}
 		[outFile writeData:[NSData dataWithBytes:[_message UTF8String] length:[_message lengthOfBytesUsingEncoding:NSUTF8StringEncoding]]];
 	    }
 	    [outFile closeFile];
     }
 }
 
--(LLData *)showLocationWithMNC:(int) MNC andMCC:(int) MCC andCID:(int) CID andLAC:(int) LAC
+-(LLData *)showLocationWithMNC:(int) MNC andMCC:(int) MCC andCID:(int) CID andLAC:(int) LAC andRX:(int) rxl
 {	
     char pd[] = {
 	0x00, 0x0e,
@@ -149,12 +168,13 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
 	double lon = ((double)((ps[11] << 24) | (ps[12] << 16) | (ps[13] << 8) | (ps[14]))) / 1000000;
 	NSLog(@"Latitude %f, Longtitude %f\n", lat, lon);
 	//[self addLocationWithLat: lat andLon: lon andDate: [[NSDate alloc] init]];
-	return [[LLData alloc] initWithLat: lat andLon: lon andDate: [[NSDate alloc] init]];
+	return [[LLData alloc] initWithLat: lat andLon: lon andDate: [[NSDate alloc] init] andRX: rxl];
     } else {
 	NSLog(@"opcode1=%04X", opcode1);
 	NSLog(@"opcode2=%02X", opcode1);
 	NSLog(@"ret_cod=%d", ret_code);
 	NSLog(@"Can't get GPS data");
+	return [[LLData alloc] initWithCid: CID andLac: LAC andMNC: MNC andMCC: MCC andDate: [[NSDate alloc] init] andRX: rxl];
     }
     return nil;
 }
@@ -198,26 +218,36 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
     free(a);
 }
 
+- (void) setUpdateDelay:(int) delay
+{
+    update_delay = delay;
+}
+
 -(void) main
 {
     int i;
     NSLog(@"Starting...");
     theDataArray = [[NSMutableArray alloc] init];
     [self cellConnect];
-    [theDataArray removeAllObjects];
-    int cellcount = [self getCellCount];
-    NSLog(@"Cells %d", cellcount);
-    for (i = 0; i < cellcount; i++) {
-	[self getCellInfo: i];
-	LLData *data = [self showLocationWithMNC: cellinfo.network 
+    
+    while (1) {
+	[theDataArray removeAllObjects];
+	int cellcount = [self getCellCount];
+	NSLog(@"Cells %d", cellcount);
+	for (i = 0; i < cellcount; i++) {
+	    [self getCellInfo: i];
+	    LLData *data = [self showLocationWithMNC: cellinfo.network 
 		    andMCC: cellinfo.servingmnc 
 		    andCID: cellinfo.cellid
 		    andLAC: cellinfo.location
-	];
-	if (data != nil)
-	    [theDataArray addObject: data];
+		    andRX:  cellinfo.rxlevel
+	    ];
+	    if (data != nil)
+		[theDataArray addObject: data];
+	}
+	[self addLocationFromPacket: theDataArray];
+	sleep(update_delay);
     }
-    [self addLocationFromPacket: theDataArray];
     NSLog(@"Finishing...");
 }
 
