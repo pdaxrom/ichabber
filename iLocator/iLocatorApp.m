@@ -25,16 +25,8 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
     [super dealloc];
 }
 
--(void)addLocationWithLat:(double) LAT andLon:(double) LON andDate:(NSDate *) date
+-(void)addLocationFromPacket:(NSMutableArray *) packet
 {
-    NSString *_message = [NSString stringWithFormat:@"%@ lat=%f lon=%f\n",
-			    	[date descriptionWithCalendarFormat: 
-				    @"%b %d, %Y %I:%M %p" 
-				    timeZone:nil locale:nil
-				],
-				LAT,
-				LON
-			];
 
     NSString *name = [[NSString alloc] initWithString:@"/tmp/iLocator.txt"];
     if (![[NSFileManager defaultManager] fileExistsAtPath:name])
@@ -44,12 +36,27 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
 
     if (outFile != nil) {
 	    [outFile seekToEndOfFile];
-	    [outFile writeData:[NSData dataWithBytes:[_message UTF8String] length:[_message lengthOfBytesUsingEncoding:NSUTF8StringEncoding]]];
+
+	    int count = [packet count];
+	    NSLog(@"count=%d", count);
+	    int i;
+	    for (i = 0; i < count; i++) {
+		LLData *d = [packet objectAtIndex: i];
+		NSString *_message = [NSString stringWithFormat:@"%@ lat=%f lon=%f\n",
+			    	[[d getDate] descriptionWithCalendarFormat: 
+				    @"%b %d, %Y %I:%M %p" 
+				    timeZone:nil locale:nil
+				],
+				[d getLat],
+				[d getLon]
+			];
+		[outFile writeData:[NSData dataWithBytes:[_message UTF8String] length:[_message lengthOfBytesUsingEncoding:NSUTF8StringEncoding]]];
+	    }
 	    [outFile closeFile];
     }
 }
 
--(void)showLocationWithMNC:(int) MNC andMCC:(int) MCC andCID:(int) CID andLAC:(int) LAC
+-(LLData *)showLocationWithMNC:(int) MNC andMCC:(int) MCC andCID:(int) CID andLAC:(int) LAC
 {	
     char pd[] = {
 	0x00, 0x0e,
@@ -141,13 +148,15 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
 	double lat = ((double)((ps[7] << 24) | (ps[8] << 16) | (ps[9] << 8) | (ps[10]))) / 1000000;
 	double lon = ((double)((ps[11] << 24) | (ps[12] << 16) | (ps[13] << 8) | (ps[14]))) / 1000000;
 	NSLog(@"Latitude %f, Longtitude %f\n", lat, lon);
-	[self addLocationWithLat: lat andLon: lon andDate: [[NSDate alloc] init]];
+	//[self addLocationWithLat: lat andLon: lon andDate: [[NSDate alloc] init]];
+	return [[LLData alloc] initWithLat: lat andLon: lon andDate: [[NSDate alloc] init]];
     } else {
 	NSLog(@"opcode1=%04X", opcode1);
 	NSLog(@"opcode2=%02X", opcode1);
 	NSLog(@"ret_cod=%d", ret_code);
 	NSLog(@"Can't get GPS data");
     }
+    return nil;
 }
 
 -(void)cellConnect
@@ -187,47 +196,28 @@ static void sourcecallback ( CFMachPortRef port, void *msg, CFIndex size, void *
     NSLog(@"C1: %d, C2: %d\n", cellinfo.c1, cellinfo.c2);
 
     free(a);
-#if 0
-    int i;
-    int cellcount;
-		
-    _CTServerConnectionCellMonitorGetCellCount(&tl, connection, &cellcount);
-    NSLog(@"Cell count: %d (%d)\n", cellcount, tl);
-    char *a = malloc(sizeof(CellInfo));
-    for(i = 0; i < cellcount; i++) {
-	_CTServerConnectionCellMonitorGetCellInfo(&tl, connection, i, a);
-	memcpy(&cellinfo, a, sizeof(CellInfo));
-	NSLog(@"Cell Site: %d, MCC: %d, ", i, cellinfo.servingmnc);
-	NSLog(@"MNC: %d ", cellinfo.network);
-	NSLog(@"Location: %d, Cell ID: %d, Station: %d, ", cellinfo.location, cellinfo.cellid, cellinfo.station);
-	NSLog(@"Freq: %d, RxLevel: %d, ", cellinfo.freq, cellinfo.rxlevel);
-	NSLog(@"C1: %d, C2: %d\n", cellinfo.c1, cellinfo.c2);
-    }
-	
-    _CTServerConnectionCellMonitorGetCellInfo(&tl, connection, 0, a);
-				
-    memcpy(&cellinfo, a, sizeof(CellInfo));
-				
-    if (a)
-	free(a);
-#endif
 }
 
 -(void) main
 {
     int i;
     NSLog(@"Starting...");
+    theDataArray = [[NSMutableArray alloc] init];
     [self cellConnect];
+    [theDataArray removeAllObjects];
     int cellcount = [self getCellCount];
     NSLog(@"Cells %d", cellcount);
     for (i = 0; i < cellcount; i++) {
 	[self getCellInfo: i];
-	[self showLocationWithMNC: cellinfo.network 
+	LLData *data = [self showLocationWithMNC: cellinfo.network 
 		    andMCC: cellinfo.servingmnc 
 		    andCID: cellinfo.cellid
 		    andLAC: cellinfo.location
 	];
+	if (data != nil)
+	    [theDataArray addObject: data];
     }
+    [self addLocationFromPacket: theDataArray];
     NSLog(@"Finishing...");
 }
 
