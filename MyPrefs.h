@@ -17,6 +17,10 @@
 #import "EyeCandy.h"
 #import "version.h"
 
+#define PATH			[@"~/Library/iChabber/" stringByExpandingTildeInPath]
+#define GLOBAL_PREF_PATH	[NSString stringWithFormat: @"%@/%@", PATH, @"iChabber.plist"]
+#define USER_PREF_PATH(user)	[NSString stringWithFormat: @"%@/iChabber_%@.plist", PATH, user]
+
 #define CFGDIR  "Library/iChabber/"
 #define CFGNAME "config"
 
