@@ -54,6 +54,10 @@
 		statusText = [[NSString alloc] initWithString:s];
 	}
 
+    - (void) setMsgCounter:(int)n {
+	newmsg = n;
+    }
+
     -(void) incMsgCounter {
 	newmsg++;
     }

@@ -141,6 +141,13 @@ int buddy_compare_status(id left, id right, void * context)
 		Buddy *theBuddy = [[Buddy alloc] initWithJID:[NSString stringWithUTF8String: jid]
 						     andName:[NSString stringWithUTF8String: ((name)?name:jid)]
 						     andGroup:[NSString stringWithUTF8String: ((group)?group:"Buddies")]];
+
+		NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([theBuddy getJID])];
+		if (user_dict != nil) {
+		    int new_messages = [[user_dict objectForKey:@"newMessages"] intValue];
+		    [theBuddy setMsgCounter: new_messages];
+		}
+
 		[buddyArray addObject: [theBuddy autorelease]];
 		
 		if (jid)
@@ -329,6 +336,15 @@ int buddy_compare_status(id left, id right, void * context)
 	for (i = 0; i < nbuddies; i++) {
 	    Buddy *buddy = [buddyArray objectAtIndex: i];
 	    count += [buddy getMsgCounter];
+
+	    NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([buddy getJID])];
+	    if(user_dict == nil) {
+			user_dict = [[NSMutableDictionary alloc] init];
+			[user_dict setObject:[buddy getName] forKey:@"name"];
+			[user_dict setObject:[buddy getJID] forKey:@"jid"];
+	    }
+	    [user_dict setObject: [NSString stringWithFormat:@"%d", [buddy getMsgCounter]] forKey:@"newMessages"];
+	    [user_dict writeToFile: USER_PREF_PATH([buddy getJID]) atomically: TRUE];
 	}
 	return count;
     }

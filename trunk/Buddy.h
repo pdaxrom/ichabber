@@ -31,6 +31,8 @@
 
 - (void)setStatusText:(NSString*)s;
 
+- (void) setMsgCounter:(int)n;
+
 - (void) incMsgCounter;
 
 - (int) getMsgCounter;
