@@ -20,6 +20,8 @@ LDFLAGS	= -ObjC -lobjc \
 	-framework Celestial \
 	-framework CoreTelephony \
 	-framework Message \
+	-framework IOKit \
+	-framework AppSupport \
 	-lssl -lcrypto
 	
 LDFLAGS_FRAMEWORKSDIR=-F/opt/iphone-sdk/share/heavenly/System/Library/

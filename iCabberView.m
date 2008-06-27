@@ -342,9 +342,13 @@ int buddy_compare_status(id left, id right, void * context)
 			user_dict = [[NSMutableDictionary alloc] init];
 			[user_dict setObject:[buddy getName] forKey:@"name"];
 			[user_dict setObject:[buddy getJID] forKey:@"jid"];
+			[user_dict setObject:@"0" forKey:@"newMessages"];
 	    }
-	    [user_dict setObject: [NSString stringWithFormat:@"%d", [buddy getMsgCounter]] forKey:@"newMessages"];
-	    [user_dict writeToFile: USER_PREF_PATH([buddy getJID]) atomically: TRUE];
+	    int new_messages = [[user_dict objectForKey:@"newMessages"] intValue];
+	    if (new_messages != [buddy getMsgCounter]) {
+		[user_dict setObject: [NSString stringWithFormat:@"%d", [buddy getMsgCounter]] forKey:@"newMessages"];
+		[user_dict writeToFile: USER_PREF_PATH([buddy getJID]) atomically: TRUE];
+	    }
 	}
 	return count;
     }
@@ -503,6 +507,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    // reset ping counter
 	    
 	    ping_counter = ping_interval;
+	    ping_errors = 0;
 	    
 		srv_msg *incoming = readserver(sock, [myPrefs useSSL]);
 	    
@@ -604,12 +609,17 @@ int buddy_compare_status(id left, id right, void * context)
 	    NSLog(@"Send ping");
 	    srv_sendping(sock, [myPrefs useSSL]);
 	} else if (!ping_counter) {
-	    NSLog(@"BUMS! Network offline!");
-	    [self logoffMyAccount];
-	    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
+	    ping_errors++;
+	    ping_counter = ping_interval;
+	    NSLog(@"Ping timeout %d\n", ping_errors);
+	    if (ping_errors > 2) {
+		NSLog(@"BUMS! Network offline!");
+		[self logoffMyAccount];
+		[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 		    closeBtnTitle:@"Ok" 
 		    withError:NSLocalizedString(@"Unable to get a response from remote server. Check your network and try connect again.", @"Timeout")];
-	    return;
+		return;
+	    }
 	}
     }
 
@@ -646,6 +656,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	ping_interval = 80 * 4;
 	ping_counter = ping_interval;
+	ping_errors = 0;
 
 	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 4.f) target:self 
     		    selector:@selector(timer:) userInfo:nil repeats:YES];	
