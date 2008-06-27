@@ -47,6 +47,7 @@
     //ping counter
     int ping_counter;
     int ping_interval;
+    int ping_errors;
     
     int connected;
 }
