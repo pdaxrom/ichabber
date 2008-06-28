@@ -7,6 +7,7 @@
 //
 
 #import "Notifications.h"
+#import "NSLogX.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -91,7 +92,7 @@ int vibratecallback(void *connection, CFStringRef string, CFDictionaryRef dictio
 	[_avc retain];
 	[sound retain];
 	{
-	    NSLog(@"Notifications> play sound");
+	    NSLogX(@"Notifications> play sound");
 	    NSError* error;
 	    [_avc setCurrentItem:sound];
 	    [_avc play:&error];
@@ -104,7 +105,7 @@ int vibratecallback(void *connection, CFStringRef string, CFDictionaryRef dictio
 
     - (void) vibrate {
 	{
-		NSLog(@"Vibrate...");
+		NSLogX(@"Vibrate...");
 		_isVibrating = YES;
 		[NSThread detachNewThreadSelector:@selector(doVibrate) toTarget:self withObject:nil];
 	}

@@ -1,6 +1,6 @@
 TARGET = iChabber
 
-VERSION := r`unset LC_ALL ; svn info | grep Revision | cut -f2 -d':' | sed 's/ //g'`
+VERSION := r`unset LC_ALL ; unset LANG ; svn info | grep Revision | cut -f2 -d':' | sed 's/ //g'`
 
 LANGUAGES=$(wildcard *.lproj)
 
@@ -52,7 +52,8 @@ APPOBJS = main.o \
 	  BuddyAction.o \
 	  IconSet.o \
 	  BuddyCell.o \
-	  resolveHostname.o
+	  resolveHostname.o \
+	  NSLogX.o
 
 $(TARGET):  version.h $(APPOBJS) $(OBJS)
 	$(LD) $(LDFLAGS_FRAMEWORKSDIR) $(LDFLAGS) -o $@ $^

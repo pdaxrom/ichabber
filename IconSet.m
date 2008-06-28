@@ -1,4 +1,5 @@
 #import "IconSet.h"
+#import "NSLogX.h"
 
 static id sharedInstanceIcon;
 
@@ -37,7 +38,7 @@ static NSString *file[ICON_MAX] = {
 	for (i = 0; i < ICON_MAX; i++) {
 	    _image[i] = [UIImage applicationImageNamed: file[i]];
 	    if (_image[i] == nil)
-		NSLog(@"Can't load image %@", file[i]);
+		NSLogX(@"Can't load image %@", file[i]);
 	}
 	
 	return self;
