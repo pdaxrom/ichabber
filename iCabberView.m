@@ -200,7 +200,7 @@ int buddy_compare_status(id left, id right, void * context)
 	[userView setText:@""];
 	[userView setTitle:[buddy getName]];
 
-	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [[buddy getJID] lowercaseString]];
+	NSString *name = [NSString stringWithFormat:@"%@/%@", PATH, [[buddy getJID] lowercaseString]];
 
 	//NSLogX(@"read history %@\n\n", name);
 
@@ -255,7 +255,7 @@ int buddy_compare_status(id left, id right, void * context)
 	else
 	    _message = [NSString stringWithFormat:@"<table><tr><td width=320>%@</td></tr></table>", message];
 
-	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
+	NSString *name = [NSString stringWithFormat:@"%@/%@", PATH, [username lowercaseString]];
 
 	//NSLogX(@"write history %@\n\n", name);
 

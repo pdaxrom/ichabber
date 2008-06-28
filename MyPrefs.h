@@ -56,8 +56,6 @@
 - (void)loadConfig;
 - (void)saveConfig;
 
-- (NSString *) getConfigDir;
-
 - (NSString *) getUsername;
 - (NSString *) getPassword;
 - (NSString *) getResource;
