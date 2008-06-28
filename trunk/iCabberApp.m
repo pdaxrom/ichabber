@@ -1,10 +1,11 @@
 #import "iCabberApp.h"
 #import "iCabberView.h"
+#import "NSLogX.h"
 
 @implementation iCabberApp
 
     -(void)applicationSuspend:(GSEvent *)event {
-	NSLog(@"applicationSuspend");
+	NSLogX(@"applicationSuspend");
 	if (![[iCabberView sharedInstance] isConnected]) {
 	    [UIApp removeApplicationBadge];
 	    system("rm /tmp/SummerBoard.DisablePowerManagement");
@@ -15,25 +16,27 @@
     }
 
     -(void)applicationResume:(GSEvent *)event {
-	NSLog(@"applicationResume");
+	NSLogX(@"applicationResume");
 	[[iCabberView sharedInstance] updateAfterResume];
 	system("rm /tmp/SummerBoard.DisablePowerManagement");	
     }
 
     -(void)applicationExited:(GSEvent *)event {
-	NSLog(@"applicationExited");
+	NSLogX(@"applicationExited");
     }
 
     void powerCallback(void *refCon, io_service_t service, natural_t messageType, void *messageArgument)
     {	
-	NSLog(@"powerCallback");
+	NSLogX(@"powerCallback");
 	[(iCabberApp *)refCon powerMessageReceived: messageType withArgument: messageArgument];
     }
 
     - (void)powerMessageReceived:(natural_t)messageType withArgument:(void *) messageArgument
     {
-	NSLog(@"powerMessageReceived %p %p", messageType, messageArgument);
 	switch (messageType) {
+	case kIOMessageSystemWillNotSleep:
+	    NSLogX(@"powerMessageReceived kIOMessageSystemWillNotSleep");
+	    break;
         case kIOMessageSystemWillSleep:
 	    /* The system WILL go to sleep. If you do not call IOAllowPowerChange or
     	       IOCancelPowerChange to acknowledge this message, sleep will be
@@ -44,7 +47,7 @@
              */
 
             // we cannot deny forced sleep
-  	    NSLog(@"powerMessageReceived kIOMessageSystemWillSleep");
+  	    NSLogX(@"powerMessageReceived kIOMessageSystemWillSleep");
             IOAllowPowerChange(root_port, (long)messageArgument);  
             break;
         case kIOMessageCanSystemSleep:
@@ -57,7 +60,7 @@
                or IOCancelPowerChange, the system will wait 30 seconds then go to sleep.
              */
 
-	    NSLog(@"powerMessageReceived kIOMessageCanSystemSleep");
+	    NSLogX(@"powerMessageReceived kIOMessageCanSystemSleep");
 
 	    //cancel the change to prevent sleep
 	    IOCancelPowerChange(root_port, (long)messageArgument);
@@ -65,8 +68,10 @@
 
             break; 
         case kIOMessageSystemHasPoweredOn:
-            NSLog(@"powerMessageReceived kIOMessageSystemHasPoweredOn");
+            NSLogX(@"powerMessageReceived kIOMessageSystemHasPoweredOn");
             break;
+	default:
+	    NSLogX(@"powerMessageReceived %p %p", messageType, messageArgument);
 	}
     }
 
@@ -98,20 +103,20 @@
 
     - (void)applicationWillTerminate 
     {	
-	NSLog(@"applicationWillTerminate");
+	NSLogX(@"applicationWillTerminate");
 	[UIApp removeApplicationBadge];
 	system("rm /tmp/SummerBoard.DisablePowerManagement");
     }
 
     - (void)applicationDidResumeFromUnderLock
     {
-	NSLog(@"applicationDidResumeFromUnderLock");
+	NSLogX(@"applicationDidResumeFromUnderLock");
 	system("rm /tmp/SummerBoard.DisablePowerManagement");	
     }
 
     - (void)applicationWillSuspendUnderLock
     {
-	NSLog(@"applicationWillSuspendUnderLock");
+	NSLogX(@"applicationWillSuspendUnderLock");
 	if(![UIApp isLocked])
 	{
 	    if ([[iCabberView sharedInstance] isConnected])
@@ -121,19 +126,19 @@
 
     - (BOOL)applicationIsReadyToSuspend
     {
-	NSLog(@"applicationIsReadyToSuspend");
+	NSLogX(@"applicationIsReadyToSuspend");
 	return NO;
     }
 
     - (BOOL)isSuspendingUnderLock
     {
-	NSLog(@"isSuspendingUnderLock");
+	NSLogX(@"isSuspendingUnderLock");
 	return NO;
     }
 
     - (BOOL) suspendRemainInMemory
     {
-	NSLog(@"suspendRemainInMemory");
+	NSLogX(@"suspendRemainInMemory");
 	if (![[iCabberView sharedInstance] isConnected])
 		return NO;
 	return YES;

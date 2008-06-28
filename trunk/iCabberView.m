@@ -5,6 +5,7 @@
 #import "IconSet.h"
 #import "BuddyCell.h"
 #import "resolveHostname.h"
+#import "NSLogX.h"
 #import <sys/stat.h>
 #import <unistd.h>
 #import "lib/server.h"
@@ -46,11 +47,13 @@ int buddy_compare_status(id left, id right, void * context)
 
 @implementation iCabberView
     - (BOOL)hasNetworkConnection {
-	if(![[NetworkController sharedInstance] isNetworkUp]) {
-	    NSLog(@"Bring up edge");
-	    [[NetworkController sharedInstance] keepEdgeUp];
-	    [[NetworkController sharedInstance] bringUpEdge];
-	    sleep(4);
+	if (![[NetworkController sharedInstance] isNetworkUp]) {
+	    if (![[NetworkController sharedInstance]isEdgeUp]) {
+		NSLogX(@"Bring up edge");
+		[[NetworkController sharedInstance] keepEdgeUp];
+		[[NetworkController sharedInstance] bringUpEdge];
+		sleep(5);
+	    }
 	}
 	return [[NetworkController sharedInstance] isNetworkUp];
     }
@@ -66,7 +69,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    const char *user = [[myPrefs getProxyUser] UTF8String];
 	    const char *password = [[myPrefs getProxyPassword] UTF8String];
 	    
-	    NSLog(@"Enable proxy %s:%s@%s:%d\n", user, password, host, port);
+	    NSLogX(@"Enable proxy %s:%s@%s:%d\n", user, password, host, port);
 	    
     	    cw_setproxy(host, port, user, password);
 	} else
@@ -77,12 +80,12 @@ int buddy_compare_status(id left, id right, void * context)
 	if (ipa == nil)
 	    return -1;
 	
-	NSLog(@"Connection to %@...\n", ipa);
+	NSLogX(@"Connection to %@...\n", ipa);
 	if ((sock = srv_connect([[myPrefs getServer] UTF8String], [myPrefs getPort], [myPrefs useSSL])) < 0) {
-	    NSLog(@"Error conecting to (%@)\n", [myPrefs getServer]);
+	    NSLogX(@"Error conecting to (%@)\n", [myPrefs getServer]);
 	    return -1;
 	}
-	NSLog(@"Connected.\n");
+	NSLogX(@"Connected.\n");
 	return 0;
     }
 
@@ -94,11 +97,11 @@ int buddy_compare_status(id left, id right, void * context)
 	const char *my_resource = [[myPrefs getResource] UTF8String];
 
 	if ((idsession = srv_login(sock, my_servername, my_username, my_password, my_resource, [myPrefs useSSL])) == NULL) {
-	    NSLog(@"Error sending login string...\n");
+	    NSLogX(@"Error sending login string...\n");
 	    srv_close(sock, [myPrefs useSSL]);
 	    return -1;
 	}
-	NSLog(@"Connected to %s: %s\n", my_servername, idsession);
+	NSLogX(@"Connected to %s: %s\n", my_servername, idsession);
 	free(idsession);
 	return 0;
     }
@@ -120,7 +123,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    char *aux;
 	    [buddyArray removeAllObjects];
 	    
-	    //NSLog(@"[roster]: %s\n\n", roster);
+	    //NSLogX(@"[roster]: %s\n\n", roster);
 
 	    while ((aux = ut_strrstr(roster, "<item")) != NULL) {
 		char *jid = getattr(aux, "jid=");
@@ -132,11 +135,11 @@ int buddy_compare_status(id left, id right, void * context)
 		    name = NULL;
 		}
 
-		//NSLog(@"[roster]: jid=%s, name=%s, group=%s\n\n", jid, name, group);
+		//NSLogX(@"[roster]: jid=%s, name=%s, group=%s\n\n", jid, name, group);
 		
 		*aux = '\0';
         	
-		//NSLog(@"JID %s\n", jid);
+		//NSLogX(@"JID %s\n", jid);
 		
 		Buddy *theBuddy = [[Buddy alloc] initWithJID:[NSString stringWithUTF8String: jid]
 						     andName:[NSString stringWithUTF8String: ((name)?name:jid)]
@@ -180,7 +183,7 @@ int buddy_compare_status(id left, id right, void * context)
 	else
 	    from = [NSString stringWithFormat:@"%@@%@/%@", my_username, my_servername, my_resource];
 
-	//NSLog(@"send from [%@] to [%@] [%@]\n\n", from, to, msg);
+	//NSLogX(@"send from [%@] to [%@] [%@]\n\n", from, to, msg);
 	
 	srv_sendtext(sock, [to UTF8String], [msg UTF8String], [from UTF8String], [myPrefs useSSL]);
 
@@ -199,7 +202,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [[buddy getJID] lowercaseString]];
 
-	//NSLog(@"read history %@\n\n", name);
+	//NSLogX(@"read history %@\n\n", name);
 
 	NSFileHandle *inFile = [NSFileHandle fileHandleForReadingAtPath:name];
 
@@ -242,7 +245,7 @@ int buddy_compare_status(id left, id right, void * context)
 			[_time descriptionWithCalendarFormat: 
 			@"%b %d, %Y %I:%M %p" timeZone:nil locale:nil]];
 	[_time release];
-	//NSLog(@"Stamp: %@", stamp);
+	//NSLogX(@"Stamp: %@", stamp);
 	
 	if (title)
 	    _message = [NSString stringWithFormat:
@@ -254,7 +257,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	NSString *name = [NSString stringWithFormat:@"%@/%@", [myPrefs getConfigDir], [username lowercaseString]];
 
-	//NSLog(@"write history %@\n\n", name);
+	//NSLogX(@"write history %@\n\n", name);
 
 	if (![[NSFileManager defaultManager] fileExistsAtPath:name])
 	    [[NSFileManager defaultManager] createFileAtPath:name contents: nil attributes: nil];
@@ -276,12 +279,12 @@ int buddy_compare_status(id left, id right, void * context)
     }
 
     - (void)loginMyAccount {
-	//NSLog(@">>%s %s\n", [[myPrefs getUsername] UTF8String], [[myPrefs getPassword] UTF8String]);
+	//NSLogX(@">>%s %s\n", [[myPrefs getUsername] UTF8String], [[myPrefs getPassword] UTF8String]);
 	if (![self connectToServer]) {
 	    if (![self loginToServer]) {
 		[self updateBuddies];
 	    } else {
-		NSLog(@"Can't login to server");
+		NSLogX(@"Can't login to server");
 		/* handle login error here */
 		    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 			closeBtnTitle:@"Ok" 
@@ -290,7 +293,7 @@ int buddy_compare_status(id left, id right, void * context)
 		return;
 	    }
 	} else {
-	    NSLog(@"Can't connect to server");
+	    NSLogX(@"Can't connect to server");
 	    /* handle connection error here */
 	    	[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 		    closeBtnTitle:@"Ok" 
@@ -300,7 +303,7 @@ int buddy_compare_status(id left, id right, void * context)
 	}
 	[transitionView transition: 1 fromView: myPrefs toView: usersView];
 	currPage = usersView;
-        NSLog(@"0-1");
+        NSLogX(@"0-1");
 	ping_counter = ping_interval;
 	connected = 1;
     }
@@ -310,7 +313,7 @@ int buddy_compare_status(id left, id right, void * context)
 	[self disconnectFromServer];
 	[transitionView transition: 2 fromView: usersView toView: myPrefs];
 	currPage = myPrefs;
-	NSLog(@"1-0");
+	NSLogX(@"1-0");
     }
 
     - (void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
@@ -318,7 +321,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    if (button == 0) {
 		//[transitionView transition: 1 fromView: usersView toView: userView];
 		//currPage = userView;
-        	//NSLog(@"1-2");
+        	//NSLogX(@"1-2");
 	    } else if (button == 1) {
 	    
 		/* Disconnect here */
@@ -433,7 +436,7 @@ int buddy_compare_status(id left, id right, void * context)
     -(UITableCell *) table: (UITable *)table cellForRow: (int)row column: (int)col
     {
 	Buddy *buddy = [buddyArray objectAtIndex:row];
-	//NSLog(@"JID %s\n", [[buddy getJID] UTF8String]);
+	//NSLogX(@"JID %s\n", [[buddy getJID] UTF8String]);
 
 	BuddyCell *cell = [[BuddyCell alloc] initWithJID:[buddy getJID] andName:[buddy getName]];
 
@@ -499,7 +502,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	int x = check_io(sock, [myPrefs useSSL]);
 	
-	//NSLog(@"IO %d\n", x);
+	//NSLogX(@"IO %d\n", x);
 	
 	if (x > 0) {
 	    Buddy *b;
@@ -520,7 +523,7 @@ int buddy_compare_status(id left, id right, void * context)
 						[b setStatusText: [NSString stringWithUTF8String: incoming->body]];
 						free(incoming->body);
 					}
-					//NSLog(@"status ok");
+					//NSLogX(@"status ok");
 					[self updateUsersTable];
 				}
 				free(incoming->from);
@@ -540,7 +543,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 		case SM_UNSUBSCRIBE: {
 		    NSString *jid = [NSString stringWithUTF8String: incoming->from];
-		    NSLog(@"Unsubscribe request from %@", jid);
+		    NSLogX(@"Unsubscribe request from %@", jid);
 		    free(incoming->from);
 		    break;
 		    }
@@ -583,16 +586,16 @@ int buddy_compare_status(id left, id right, void * context)
     		case SM_UNHANDLED:
 		    break;
 		case SM_NODATA:
-		    NSLog(@"No data received");
+		    NSLogX(@"No data received");
 		    break;
 		case SM_NEEDDATA:
-		    NSLog(@"Incomplete read");
+		    NSLogX(@"Incomplete read");
 		    break;
     	    }
     	    free(incoming);
 	} else if (x < 0) {
 	
-	    NSLog(@"select() error");
+	    NSLogX(@"select() error");
 	    
 	    if (errno != EINTR) {
 		[self logoffMyAccount];
@@ -606,14 +609,14 @@ int buddy_compare_status(id left, id right, void * context)
 	ping_counter--;
 	
 	if (ping_counter == (ping_interval / 4)) {
-	    NSLog(@"Send ping");
+	    NSLogX(@"Send ping");
 	    srv_sendping(sock, [myPrefs useSSL]);
 	} else if (!ping_counter) {
 	    ping_errors++;
 	    ping_counter = ping_interval;
-	    NSLog(@"Ping timeout %d\n", ping_errors);
+	    NSLogX(@"Ping timeout %d\n", ping_errors);
 	    if (ping_errors > 2) {
-		NSLog(@"BUMS! Network offline!");
+		NSLogX(@"BUMS! Network offline!");
 		[self logoffMyAccount];
 		[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 		    closeBtnTitle:@"Ok" 
@@ -691,11 +694,11 @@ int buddy_compare_status(id left, id right, void * context)
 
     - (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
     {
-	NSLog(@"MAIN alert butt %d\n", button);
+	NSLogX(@"MAIN alert butt %d\n", button);
 	BuddyAction *b = [sheet context];
 	if (b != nil) {
-	    NSLog(@"jid=%@\n", [b getBuddy]);
-	    NSLog(@"action=%d\n", [b getAction]);
+	    NSLogX(@"jid=%@\n", [b getBuddy]);
+	    NSLogX(@"action=%d\n", [b getAction]);
 	    
 	    if (button == 1) {
 		NSString *jid = [b getBuddy];

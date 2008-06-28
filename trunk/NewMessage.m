@@ -1,5 +1,6 @@
 #import "NewMessage.h"
 #import "iCabberView.h"
+#import "NSLogX.h"
 
 @implementation NewMessage
 
@@ -46,16 +47,16 @@
 
     -(void) navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
 	if (button == 0) {
-    	    NSLog(@"pre3-2");
+    	    NSLogX(@"pre3-2");
 
 	    [[iCabberView sharedInstance] sendMessage:[replyText text]];
 	    [[iCabberView sharedInstance] switchFromNewMessageToUserView];
 
 	    [replyText setText:@""];
-    	    NSLog(@"3-2");
+    	    NSLogX(@"3-2");
 	} else if (button == 1) {
 	    [[iCabberView sharedInstance] switchFromNewMessageToUserView];
-    	    NSLog(@"3-2");
+    	    NSLogX(@"3-2");
 	}
     }
     

@@ -1,4 +1,5 @@
 #import "EyeCandy.h"
+#import "NSLogX.h"
 
 @implementation EyeCandy
 
@@ -43,7 +44,7 @@
 
 - (void) alertSheet: (UIAlertSheet*)sheet buttonClicked:(int)button
 {
-	NSLog(@"alert butt %d\n", button);
+	NSLogX(@"alert butt %d\n", button);
 	[sheet dismissAnimated: TRUE];
 }
 

@@ -1,12 +1,13 @@
 #import "MyPrefs.h"
 #import "iCabberView.h"
+#import "NSLogX.h"
 #import "lib/conf.h"
 
 #define DEFAULT_PROXY_PORT 3124
 
 @implementation MyPrefs
     -(void)changeSwitch {
-	NSLog(@"rere");
+	NSLogX(@"rere");
 	[table reloadData];
     }
 
@@ -123,7 +124,7 @@
 	dirPath = [[NSString alloc] initWithString:[NSHomeDirectory() stringByAppendingPathComponent:@CFGDIR]];
 	if (![[NSFileManager defaultManager] fileExistsAtPath:dirPath])
 	{
-		NSLog(@"had to create directory.");
+		NSLogX(@"had to create directory.");
 		[[NSFileManager defaultManager] createDirectoryAtPath:dirPath attributes:nil];
 	}
 
@@ -142,7 +143,7 @@
 	strcat(conf, "/");
 	strcat(conf, CFGNAME);
 
-	NSLog(@"loadConfig from %s\n", conf);
+	NSLogX(@"loadConfig from %s\n", conf);
 
 #define _S(obj, str) [obj setValue:[NSString stringWithUTF8String: str]]
 	
@@ -344,7 +345,7 @@
 	NSString *thePort = [[_proxy_port textField] text];
 	int port = [thePort intValue];
 	if ((port < 1) || (port > 65535)) {
-	    NSLog(@"Bad proxy port value\n");
+	    NSLogX(@"Bad proxy port value\n");
 	    port = DEFAULT_PROXY_PORT;
 	}
 	return port;
@@ -380,8 +381,8 @@
 
     - (void)tableRowSelected:(NSNotification *)notification
     {
-	//NSLog(@"selected row %d %s\n", [table selectedRow], [[[_username textField] text] UTF8String]);
-	//NSLog(@"selected row %s\n", zz);
+	//NSLogX(@"selected row %d %s\n", [table selectedRow], [[[_username textField] text] UTF8String]);
+	//NSLogX(@"selected row %s\n", zz);
     }
 
 
@@ -457,7 +458,7 @@
 
     - (void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
 	if (button == 0) {
-	    //NSLog(@">>%s %s\n", [[self getUsername] UTF8String], [[self getPassword] UTF8String]);
+	    //NSLogX(@">>%s %s\n", [[self getUsername] UTF8String], [[self getPassword] UTF8String]);
 		
 	    [self saveConfig];
 		

@@ -8,6 +8,7 @@
  */
 
 #import "resolveHostname.h"
+#import "NSLogX.h"
 #import <Foundation/NSHost.h>
 #import <arpa/inet.h>
 #import <netinet/in.h>
@@ -36,7 +37,7 @@ NSString * resolveHostname( NSString * name )
 		return name;
 	}
 
-	NSLog( @"Resolving for %@", name );
+	NSLogX( @"Resolving for %@", name );
 	DNSServiceErrorType error;
 	DNSServiceRef service;
 
@@ -66,7 +67,7 @@ NSString * resolveHostname( NSString * name )
 			if (FD_ISSET(dns_sd_fd, &readfds))
 			{
 				//remove this if you want to compile in c, not obj-c
-				NSLog( @"resolved %@ to %@", name, [ [ NSHost hostWithName: name ] address ] );
+				NSLogX( @"resolved %@ to %@", name, [ [ NSHost hostWithName: name ] address ] );
 				ret = [ NSString stringWithString: [ [ NSHost hostWithName: name] address ] ];
 			}
 		}
@@ -78,7 +79,7 @@ NSString * resolveHostname( NSString * name )
 	//clean up....
 	DNSServiceRefDeallocate( service );
 
-	NSLog( @"dns error: %d", error );
+	NSLogX( @"dns error: %d", error );
 
 	return nil;
 }
