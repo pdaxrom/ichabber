@@ -136,126 +136,94 @@
     }
 
     - (void)loadConfig {
-	char conf[256];
-	char data[256];
+	NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: GLOBAL_PREF_PATH];
+	if (user_dict == nil) {
+	    user_dict = [[NSMutableDictionary alloc] init];
+	    [user_dict setObject:@"" forKey:@"username"];
+	    [user_dict setObject:@"" forKey:@"password"];
+	    [user_dict setObject:@"" forKey:@"server"];
+	    [user_dict setObject:@"" forKey:@"port"];
+	    [user_dict setObject:@"0" forKey:@"useSSL"];
+	    [user_dict setObject:@"0" forKey:@"SSLVerify"];
+	    [user_dict setObject:@"0" forKey:@"useGTalk"];
+	    [user_dict setObject:@"" forKey:@"proxyHost"];
+	    [user_dict setObject:@"" forKey:@"proxyPort"];
+	    [user_dict setObject:@"" forKey:@"proxyUsername"];
+	    [user_dict setObject:@"" forKey:@"proxyPassword"];
+	    [user_dict setObject:@"0" forKey:@"proxyEnabled"];
+	    [user_dict setObject:@"0" forKey:@"soundEnabled"];
+	    [user_dict setObject:@"0" forKey:@"vibroEnabled"];
+	    [user_dict writeToFile: GLOBAL_PREF_PATH atomically: TRUE];
+	}
 
-	strcpy(conf, [dirPath UTF8String]);
-	strcat(conf, "/");
-	strcat(conf, CFGNAME);
+#define  _S(obj, str) [obj setValue:[user_dict objectForKey: str]]
+#define _SI(obj, str) [obj setValue:[[user_dict objectForKey: str] intValue]]
 
-	NSLogX(@"loadConfig from %s\n", conf);
-
-#define _S(obj, str) [obj setValue:[NSString stringWithUTF8String: str]]
+	_S (_username,	@"username");
+	_S (_password,	@"password");
+	_S (_server,	@"server");
+	_S (_port,	@"port");
 	
-	if (readconf(conf, "username", data))
-	    _S(_username, data);
-	if (readconf(conf, "password", data))
-	    _S(_password, data);
-	if (readconf(conf, "server", data))
-	    _S(_server, data);
-	if (readconf(conf, "port", data))
-	    _S(_port, data);
+	UISwitchControl* sw = [_use_ssl control];
+	_SI(sw,		@"useSSL");
+	sw = [_use_ssl_verify control];
+	_SI(sw,		@"SSLVerify");
+	sw = [_use_gtalk control];
+	_SI(sw,		@"useGTalk");
+	
+	_S(_proxy_host, @"proxyHost");
+	_S(_proxy_port, @"proxyPort");
+	_S(_proxy_username, @"proxyUsername");
+	_S(_proxy_password, @"proxyPassword");
 
-	if (readconf(conf, "use_ssl", data)) {
-	    UISwitchControl* sw = [_use_ssl control];
-	    if (!strcmp(data, "yes"))
-		[sw setValue:1.0f];
-	    else
-		[sw setValue:0.0f];
-	}
+	sw = [_proxy_enable control];
+	_SI(sw,		@"proxyEnabled");
+	sw = [_sound_enable control];
+	_SI(sw,		@"soundEnabled");
+	sw = [_vibro_enable control];
+	_SI(sw,		@"vibroEnabled");
 
-	if (readconf(conf, "ssl_verify", data)) {
-	    UISwitchControl* sw = [_use_ssl_verify control];
-	    if (!strcmp(data, "yes"))
-		[sw setValue:1.0f];
-	    else
-		[sw setValue:0.0f];
-	}
+#undef _S
+#undef _SI
 
-	if (readconf(conf, "use_gtalk", data)) {
-	    UISwitchControl* sw = [_use_gtalk control];
-	    if (!strcmp(data, "yes"))
-		[sw setValue:1.0f];
-	    else
-		[sw setValue:0.0f];
-	}
-
-	if (readconf(conf, "proxy_host", data))
-	    _S(_proxy_host, data);
-	if (readconf(conf, "proxy_port", data))
-	    _S(_proxy_port, data);
-	if (readconf(conf, "proxy_username", data))
-	    _S(_proxy_username, data);
-	if (readconf(conf, "proxy_password", data))
-	    _S(_proxy_password, data);
-
-	if (readconf(conf, "proxy_enabled", data)) {
-	    UISwitchControl* sw = [_proxy_enable control];
-	    if (!strcmp(data, "yes"))
-		[sw setValue:1.0f];
-	    else
-		[sw setValue:0.0f];
-	}
-
-	if (readconf(conf, "sound_enabled", data)) {
-	    UISwitchControl* sw = [_sound_enable control];
-	    if (!strcmp(data, "yes"))
-		[sw setValue:1.0f];
-	    else
-		[sw setValue:0.0f];
-	}
-
-	if (readconf(conf, "vibro_enabled", data)) {
-	    UISwitchControl* sw = [_vibro_enable control];
-	    if (!strcmp(data, "yes"))
-		[sw setValue:1.0f];
-	    else
-		[sw setValue:0.0f];
-	}
-
-#undef _STR
 	[table reloadData];
     }
     
     - (void)saveConfig {
-	char conf[256];
-	
-	strcpy(conf, [dirPath UTF8String]);
-	strcat(conf, "/");
-	strcat(conf, CFGNAME);
+	NSMutableDictionary *user_dict = [[NSMutableDictionary alloc] init];
 
-#define _G(obj) ((char *)[[[obj textField] text] UTF8String])
+#define  _G(obj, str) [user_dict setObject: [[obj textField] text] forKey: str]
+#define _GI(obj, str) [user_dict setObject: ([obj value] == 1.0f)?@"1":@"0" forKey: str]
 
-	writeconf(conf, "username", _G(_username), 1);
-	writeconf(conf, "password", _G(_password), 0);
-	writeconf(conf, "server", _G(_server), 0);
-	writeconf(conf, "port", _G(_port), 0);
+	_G(_username,	@"username");
+	_G(_password,	@"password");
+	_G(_server,	@"server");
+	_G(_port,	@"port");
 
 	UISwitchControl* sw = [_use_ssl control];
-	writeconf(conf, "use_ssl", ([sw value] == 1.0f)?"yes":"no", 0);
+	_GI(sw,		@"useSSL");
 	sw = [_use_ssl_verify control];
-	writeconf(conf, "ssl_verify", ([sw value] == 1.0f)?"yes":"no", 0);
+	_GI(sw,		@"SSLVerify");
 	sw = [_use_gtalk control];
-	writeconf(conf, "use_gtalk", ([sw value] == 1.0f)?"yes":"no", 0);
+	_GI(sw,		@"useGTalk");
 
-	writeconf(conf, "proxy_host", _G(_proxy_host), 0);
-	writeconf(conf, "proxy_port", _G(_proxy_port), 0);
-	writeconf(conf, "proxy_username", _G(_proxy_username), 0);
-	writeconf(conf, "proxy_password", _G(_proxy_password), 0);
+	_G(_proxy_host,	@"proxyHost");
+	_G(_proxy_port,	@"proxyPort");
+	_G(_proxy_username, @"proxyUsername");
+	_G(_proxy_password, @"proxyPassword");
 
 	sw = [_proxy_enable control];
-	writeconf(conf, "proxy_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
-
+	_GI(sw,		@"proxyEnabled");
 	sw = [_sound_enable control];
-	writeconf(conf, "sound_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
+	_GI(sw,		@"soundEnabled");
 	sw = [_vibro_enable control];
-	writeconf(conf, "vibro_enabled", ([sw value] == 1.0f)?"yes":"no", 0);
+	_GI(sw,		@"vibroEnabled");
+
+	[user_dict writeToFile: GLOBAL_PREF_PATH atomically: TRUE];
 
 #undef _G
-    }
+#undef _GI
 
-    - (NSString *)getConfigDir {
-	return dirPath;
     }
 
     - (void)reloadData
