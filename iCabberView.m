@@ -221,7 +221,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    NSData *fileData = [inFile readDataToEndOfFile];
 	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
 
-	    [userView setText: tmp];
+	    [userView setText: [[IconSet sharedInstance] insertSmiles: tmp]];
 #if 0
 	    const char *data, *ptr;
 	    
@@ -264,7 +264,8 @@ int buddy_compare_status(id left, id right, void * context)
 	    "<tr><td width=320>%@</td></tr></table>",
 	    titlecolor, stamp, from, message];
 	else
-	    _message = [NSString stringWithFormat:@"<table><tr><td width=320>%@</td></tr></table>", message];
+	    _message = [NSString stringWithFormat:@"<table><tr><td width=320>%@</td></tr></table>", 
+	    message];
 
 	NSString *name = [NSString stringWithFormat:@"%@/%@", PATH, [username lowercaseString]];
 
@@ -284,7 +285,7 @@ int buddy_compare_status(id left, id right, void * context)
 
 	    if (currBuddy != nil)
 		if ([[[currBuddy getJID] lowercaseString] isEqualToString:[username lowercaseString]]) {
-		    [userView appendText: _message];
+		    [userView appendText: [[IconSet sharedInstance] insertSmiles: _message]];
 		}
 	}	
     }
@@ -703,6 +704,8 @@ int buddy_compare_status(id left, id right, void * context)
 	*/
 
         [transitionView transition: 0 toView: myPrefs];
+	
+	//NSLogX(@"--%@", [[IconSet sharedInstance] insertSmiles:@"Hello :) Bye B) aha :-o"]);
 	
 	return self;
     }

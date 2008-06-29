@@ -16,6 +16,43 @@ static NSString *file[ICON_MAX] = {
     @"content.png"
 };
 
+struct SmileTable {
+    NSString *smile;
+    NSString *image;
+} smileTable[] = {
+    {@":)",	@"smile.png"},
+    {@":-)",	@"smile.png"},
+    {@";)",	@"wink.png"},
+    {@";-)",	@"wink.png"},
+    {@":P",	@"tongue.png"},
+    {@":-P",	@"tongue.png"},
+    {@":D",	@"biggrin.png"},
+    {@":-D",	@"biggrin.png"},
+    {@":&gt;",	@"biggrin.png"},
+    {@":-&gt;",	@"biggrin.png"},
+    {@":(",	@"unhappy.png"},
+    {@":-(",	@"unhappy.png"},
+    {@";(",	@"cry.png"},
+    {@";-(",	@"cry.png"},
+    {@":'(",	@"cry.png"},
+    {@":'-(",	@"cry.png"},
+    {@":O",	@"oh.png"},
+    {@":-O",	@"oh.png"},
+    {@":@",	@"angry.png"},
+    {@":-@",	@"angry.png"},
+    {@":$",	@"blush.png"},
+    {@":-$",	@"blush.png"},
+    {@":|",	@"stare.png"},
+    {@":-|",	@"stare.png"},
+    {@":S",	@"frowning.png"},
+    {@":-S",	@"frowning.png"},
+    {@"B)",	@"coolglasses.png"},
+    {@"B-)",	@"coolglasses.png"},
+    {@":[",	@"bat.png"},
+    {@":-[",	@"bat.png"},
+    {nil, nil}
+};
+
 @implementation IconSet
 
     + (id) initSharedInstance
@@ -47,6 +84,27 @@ static NSString *file[ICON_MAX] = {
     - (UIImage *) getIcon:(int) i
     {
 	return _image[i];
+    }
+
+    - (NSString *) insertSmiles:(NSString *) str
+    {
+	int i = 0;
+	
+	NSMutableString *_str = [[NSMutableString alloc] initWithString: str];
+
+	while (smileTable[i].smile != nil) {
+	    NSString *target = smileTable[i].smile;
+	    NSString *replacement = [NSString stringWithFormat: @"<img src='file:///Applications/iChabber.app/smiles/%@'>", smileTable[i].image];
+
+	    [_str replaceOccurrencesOfString:target 
+		  withString:replacement
+	          options:NSCaseInsensitiveSearch
+	          range:NSMakeRange(0, [_str length])
+	    ];
+	    i++;
+	}
+
+	return _str;
     }
 
     - (UIImage *) getIconForJID:(NSString *) jid

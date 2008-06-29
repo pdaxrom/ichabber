@@ -35,6 +35,7 @@ enum {
 - (id) init;
 - (UIImage *) getIcon:(int) i;
 - (UIImage *) getIconForJID:(NSString *) jid;
+- (NSString *) insertSmiles:(NSString *) str;
 - (void) dealloc;
 
 + (id) initSharedInstance;

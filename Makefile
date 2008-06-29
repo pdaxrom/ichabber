@@ -74,10 +74,12 @@ upload: $(TARGET)
 package: $(TARGET)
 	rm -rf $(TARGET).app
 	mkdir -p $(TARGET).app
+	mkdir -p $(TARGET).app/smiles
 	cp $(TARGET) $(TARGET).app/$(TARGET)
 	cp Info.plist $(TARGET).app/Info.plist
 	cp icons/*.png $(TARGET).app/
 	cp sounds/*.aiff $(TARGET).app/
+	cp smiles/*.png $(TARGET).app/smiles/
 	for i in $(LANGUAGES); do \
 	    mkdir -p $(TARGET).app/$$i; \
 	    cp $$i/Localizable.strings $(TARGET).app/$$i; \
