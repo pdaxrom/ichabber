@@ -46,6 +46,8 @@
 
     UIPreferencesControlTableCell *_sound_enable;
     UIPreferencesControlTableCell *_vibro_enable;
+
+    UIPreferencesControlTableCell *_offline_users;
     
     NSString *dirPath;
 }
@@ -72,6 +74,7 @@
 
 - (int) useSound;
 - (int) useVibro;
+- (int) offlineUsers;
 
 - (void)tableRowSelected:(NSNotification *)notification;
 
