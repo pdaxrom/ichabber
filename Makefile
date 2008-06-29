@@ -8,7 +8,7 @@ CC = arm-apple-darwin-gcc
 
 LD = $(CC)
 
-CFLAGS	= -DHAVE_OPENSSL -DDEBUG=1 -O2 -Wall
+CFLAGS	= -DHAVE_OPENSSL -DDEBUG=1 -Wall -O2
 
 LDFLAGS	= -ObjC -lobjc \
 	-framework CoreFoundation \

@@ -140,18 +140,29 @@ int buddy_compare_status(id left, id right, void * context)
 		*aux = '\0';
         	
 		//NSLogX(@"JID %s\n", jid);
+
+		NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([[NSString stringWithUTF8String: jid] lowercaseString])];
+		if (user_dict == nil) {
+		    user_dict = [[NSMutableDictionary alloc] init];
+		    [user_dict setObject:[NSString stringWithUTF8String: ((name)?name:jid)] forKey:@"name"];
+		    [user_dict setObject:[NSString stringWithUTF8String: jid] forKey:@"jid"];
+		    [user_dict setObject:[NSString stringWithUTF8String: ((group)?group:"Buddies")] forKey:@"group"];
+		    [user_dict setObject:@"0" forKey:@"newMessages"];
+		    [user_dict writeToFile: USER_PREF_PATH([[NSString stringWithUTF8String: jid] lowercaseString]) atomically: TRUE];
+		}
 		
-		Buddy *theBuddy = [[Buddy alloc] initWithJID:[NSString stringWithUTF8String: jid]
+		int new_messages = [[user_dict objectForKey:@"newMessages"] intValue];
+
+		
+		if ([myPrefs offlineUsers] ||
+		    new_messages) {
+
+		    Buddy *theBuddy = [[Buddy alloc] initWithJID:[NSString stringWithUTF8String: jid]
 						     andName:[NSString stringWithUTF8String: ((name)?name:jid)]
 						     andGroup:[NSString stringWithUTF8String: ((group)?group:"Buddies")]];
-
-		NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([theBuddy getJID])];
-		if (user_dict != nil) {
-		    int new_messages = [[user_dict objectForKey:@"newMessages"] intValue];
 		    [theBuddy setMsgCounter: new_messages];
+		    [buddyArray addObject: [theBuddy autorelease]];
 		}
-
-		[buddyArray addObject: [theBuddy autorelease]];
 		
 		if (jid)
 		    free(jid);
@@ -345,6 +356,7 @@ int buddy_compare_status(id left, id right, void * context)
 			user_dict = [[NSMutableDictionary alloc] init];
 			[user_dict setObject:[buddy getName] forKey:@"name"];
 			[user_dict setObject:[buddy getJID] forKey:@"jid"];
+			[user_dict setObject:[buddy getGroup] forKey:@"group"];
 			[user_dict setObject:@"0" forKey:@"newMessages"];
 	    }
 	    int new_messages = [[user_dict objectForKey:@"newMessages"] intValue];
@@ -516,7 +528,20 @@ int buddy_compare_status(id left, id right, void * context)
 	    
 		switch (incoming->m) {
 			case SM_PRESENCE:
+				NSLogX(@"Presence from %@", [[NSString stringWithUTF8String: incoming->from] lowercaseString]);
 				b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
+				if (b == nil) {
+				    NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([[NSString stringWithUTF8String: incoming->from] lowercaseString])];
+				    if (user_dict != nil) {
+					NSString *jid   = [user_dict objectForKey:@"jid"];
+					NSString *name  = [user_dict objectForKey:@"name"];
+					NSString *group = [user_dict objectForKey:@"group"];
+					b = [[Buddy alloc] initWithJID: jid
+			    				   andName:	name
+			    				   andGroup: 	group];
+					[buddyArray addObject: [b autorelease]];
+				    }
+				}
 				if (b != nil) {
 					[b setStatus:incoming->connected];
 					if(incoming->body) {

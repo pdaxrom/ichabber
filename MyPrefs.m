@@ -111,6 +111,12 @@
 	[_vibro_enable setControl:switchControl];
 	[switchControl release];
 
+	_offline_users = [[UIPreferencesControlTableCell alloc] init];
+	[_offline_users setTitle:NSLocalizedString(@"Show Offline Users", @"Offline users")];
+	switchControl = [[UISwitchControl alloc] initWithFrame:CGRectMake(200., 10., 50., 20.)];
+	[_offline_users setControl:switchControl];
+	[switchControl release];
+
         rect = [UIHardware fullScreenApplicationContentRect];
         rect.origin = CGPointMake (0.0f, 48.0f);
         rect.size.height -= 48.0f;
@@ -153,6 +159,7 @@
 	    [user_dict setObject:@"0" forKey:@"proxyEnabled"];
 	    [user_dict setObject:@"0" forKey:@"soundEnabled"];
 	    [user_dict setObject:@"0" forKey:@"vibroEnabled"];
+	    [user_dict setObject:@"0" forKey:@"showOfflineUsers"];
 	    [user_dict writeToFile: GLOBAL_PREF_PATH atomically: TRUE];
 	}
 
@@ -182,6 +189,8 @@
 	_SI(sw,		@"soundEnabled");
 	sw = [_vibro_enable control];
 	_SI(sw,		@"vibroEnabled");
+	sw = [_offline_users control];
+	_SI(sw,		@"showOfflineUsers");
 
 #undef _S
 #undef _SI
@@ -218,6 +227,8 @@
 	_GI(sw,		@"soundEnabled");
 	sw = [_vibro_enable control];
 	_GI(sw,		@"vibroEnabled");
+	sw = [_offline_users control];
+	_GI(sw,		@"showOfflineUsers");
 
 	[user_dict writeToFile: GLOBAL_PREF_PATH atomically: TRUE];
 
@@ -347,6 +358,15 @@
 	    return 0;
     }
 
+    - (int) offlineUsers;
+    {
+	UISwitchControl* sw = [_offline_users control];
+	if ([sw value] == 1.0f)
+	    return 1;
+	else
+	    return 0;
+    }
+
     - (void)tableRowSelected:(NSNotification *)notification
     {
 	//NSLogX(@"selected row %d %s\n", [table selectedRow], [[[_username textField] text] UTF8String]);
@@ -370,7 +390,7 @@
 		sw = [_proxy_enable control];
 		return ([sw value] == 0.0f)?1:5;
 	    case 2:
-		return 2;
+		return 3;
 	}
     }
 
@@ -419,6 +439,8 @@
 		return _sound_enable;
 	    case 1:
 		return _vibro_enable;
+	    case 2:
+		return _offline_users;
 	    }
 	}
 	return nil;
