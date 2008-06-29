@@ -545,9 +545,10 @@ int buddy_compare_status(id left, id right, void * context)
 				if (b != nil) {
 					[b setStatus:incoming->connected];
 					if(incoming->body) {
-						[b setStatusText: [NSString stringWithUTF8String: incoming->body]];
-						free(incoming->body);
-					}
+					    [b setStatusText: [NSString stringWithUTF8String: incoming->body]];
+					    free(incoming->body);
+					} else
+					    [b setStatusText: @""];
 					//NSLogX(@"status ok");
 					[self updateUsersTable];
 				}
