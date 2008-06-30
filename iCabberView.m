@@ -508,6 +508,22 @@ int buddy_compare_status(id left, id right, void * context)
 	return nil;
     }
 
+    -(Buddy *)getOfflineBuddy:(NSString *)jid
+    {
+	NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([jid lowercaseString])];
+	if (user_dict != nil) {
+	    NSString *_jid   = [user_dict objectForKey:@"jid"];
+	    NSString *_name  = [user_dict objectForKey:@"name"];
+	    NSString *_group = [user_dict objectForKey:@"group"];
+	    Buddy *buddy = [[Buddy alloc] initWithJID:  _jid
+					  andName:	_name
+				          andGroup: 	_group];
+	    [buddyArray addObject: [buddy autorelease]];
+	    return buddy;
+	}
+	return nil;
+    }
+
     -(void)timer:(NSTimer *)aTimer
     {
 	if (!connected)
@@ -531,18 +547,8 @@ int buddy_compare_status(id left, id right, void * context)
 			case SM_PRESENCE:
 				NSLogX(@"Presence from %@", [[NSString stringWithUTF8String: incoming->from] lowercaseString]);
 				b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
-				if (b == nil) {
-				    NSMutableDictionary *user_dict = [NSMutableDictionary dictionaryWithContentsOfFile: USER_PREF_PATH([[NSString stringWithUTF8String: incoming->from] lowercaseString])];
-				    if (user_dict != nil) {
-					NSString *jid   = [user_dict objectForKey:@"jid"];
-					NSString *name  = [user_dict objectForKey:@"name"];
-					NSString *group = [user_dict objectForKey:@"group"];
-					b = [[Buddy alloc] initWithJID: jid
-			    				   andName:	name
-			    				   andGroup: 	group];
-					[buddyArray addObject: [b autorelease]];
-				    }
-				}
+				if (b == nil)
+				    b = [self getOfflineBuddy:[NSString stringWithUTF8String: incoming->from]];
 				if (b != nil) {
 					[b setStatus:incoming->connected];
 					if(incoming->body) {
@@ -577,6 +583,8 @@ int buddy_compare_status(id left, id right, void * context)
 		    
     		case SM_MESSAGE:
 		    b = [self getBuddy:[NSString stringWithUTF8String: incoming->from]];
+		    if (b == nil)
+			b = [self getOfflineBuddy:[NSString stringWithUTF8String: incoming->from]];
 		    if (b != nil) {
 			if (b != currBuddy) {
 			    [b incMsgCounter];
@@ -704,8 +712,6 @@ int buddy_compare_status(id left, id right, void * context)
 	*/
 
         [transitionView transition: 0 toView: myPrefs];
-	
-	//NSLogX(@"--%@", [[IconSet sharedInstance] insertSmiles:@"Hello :) Bye B) aha :-o"]);
 	
 	return self;
     }

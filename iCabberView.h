@@ -67,6 +67,7 @@
 
 - (void)updateHistory:(NSString *)username from:(NSString *) from message:(NSString *)message title:(int)title titlecolor:(NSString *)titlecolor;
 - (Buddy *)getBuddy:(NSString *) jid;
+- (Buddy *)getOfflineBuddy:(NSString *) jid;
 - (void)updateUsersTable;
 
 - (void)updateAfterResume;
