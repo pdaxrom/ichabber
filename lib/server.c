@@ -298,7 +298,11 @@ char *srv_readstr(int sock, int ssl)
   
   do {
     str = sk_recv(sock, ssl);
-    if (ret) {
+    if (str == NULL) {
+	if (ret)
+	    free(ret);
+	return NULL;
+    } else if (ret) {
       ret = (char *) realloc(ret, strlen(ret) + strlen(str) + 1);
       strcat(ret, str);
       free(str);

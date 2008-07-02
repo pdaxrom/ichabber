@@ -123,7 +123,7 @@ int buddy_compare_status(id left, id right, void * context)
 	    char *aux;
 	    [buddyArray removeAllObjects];
 	    
-	    //NSLogX(@"[roster]: %s\n\n", roster);
+	    NSLogX(@"[roster]: %s\n\n", roster);
 
 	    while ((aux = ut_strrstr(roster, "<item")) != NULL) {
 		char *jid = getattr(aux, "jid=");
@@ -135,7 +135,11 @@ int buddy_compare_status(id left, id right, void * context)
 		    name = NULL;
 		}
 
-		//NSLogX(@"[roster]: jid=%s, name=%s, group=%s\n\n", jid, name, group);
+		NSLogX(@"[roster]: jid=%@, name=%@, group=%@", 
+			[NSString stringWithUTF8String: jid], 
+			[NSString stringWithUTF8String: ((name)?name:jid)], 
+			[NSString stringWithUTF8String: ((group)?group:"Buddies")]
+		      );
 		
 		*aux = '\0';
         	
@@ -610,18 +614,16 @@ int buddy_compare_status(id left, id right, void * context)
 		    free(incoming->body);
 		    free(incoming->from);
 		    break;
-
+		case SM_NODATA:
+		    NSLogX(@"No data received");
+		    //break;
 		case SM_STREAMERROR:
 		    [self logoffMyAccount];
 		    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
 			    closeBtnTitle:@"Ok" 
 			    withError:NSLocalizedString(@"Stream error. Check your network and try connect again.", @"Stream error")];
 		    break;
-
     		case SM_UNHANDLED:
-		    break;
-		case SM_NODATA:
-		    NSLogX(@"No data received");
 		    break;
 		case SM_NEEDDATA:
 		    NSLogX(@"Incomplete read");
