@@ -209,12 +209,20 @@ char *srv_login(int sock, const char *server, const char *user,
  *
  * Note: see `sk_send' for output values
  */
-int srv_setpresence(int sock, const char *type, int ssl)
+int srv_setpresence(int sock, const char *type, const char *msg, int ssl)
 {
   int rv;
   char *str = malloc(1024);
+  char *_msg = (char *) msg;
 
-  sprintf(str, "<presence><status>%s</status></presence>", type);
+  if (!strlen(msg))
+    _msg = "";
+
+  if (!strlen(type))
+    sprintf(str, "<presence><status>%s</status></presence>", _msg);
+  else
+    sprintf(str, "<presence><show>%s</show><status>%s</status></presence>", type, _msg);
+
   if (!(rv = sk_send(sock, str, ssl))) {
     perror("senddata (server.c:199)");
   }

@@ -1,11 +1,10 @@
 #import "iCabberApp.h"
-#import "iCabberView.h"
-#import "NSLogX.h"
 
 @implementation iCabberApp
 
     -(void)applicationSuspend:(GSEvent *)event {
 	NSLogX(@"applicationSuspend");
+	[ic setStatus:@"away" withText:@""];
 	if (![[iCabberView sharedInstance] isConnected]) {
 	    [UIApp removeApplicationBadge];
 	    system("rm /tmp/SummerBoard.DisablePowerManagement");
@@ -17,6 +16,7 @@
 
     -(void)applicationResume:(GSEvent *)event {
 	NSLogX(@"applicationResume");
+	[ic setStatus:@"" withText:@""];
 	[[iCabberView sharedInstance] updateAfterResume];
 	system("rm /tmp/SummerBoard.DisablePowerManagement");	
     }
@@ -82,7 +82,7 @@
 
 	window = [[UIWindow alloc] initWithContentRect: rect];
 	
-	iCabberView *ic = [iCabberView initSharedInstanceWithFrame: rect];
+	ic = [iCabberView initSharedInstanceWithFrame: rect];
 
 	[window setContentView: ic];	
         [window orderFront: self];
@@ -111,12 +111,14 @@
     - (void)applicationDidResumeFromUnderLock
     {
 	NSLogX(@"applicationDidResumeFromUnderLock");
+	[ic setStatus:@"" withText:@""];
 	system("rm /tmp/SummerBoard.DisablePowerManagement");	
     }
 
     - (void)applicationWillSuspendUnderLock
     {
 	NSLogX(@"applicationWillSuspendUnderLock");
+	[ic setStatus:@"away" withText:@""];
 	if(![UIApp isLocked])
 	{
 	    if ([[iCabberView sharedInstance] isConnected])

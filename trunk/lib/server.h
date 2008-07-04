@@ -24,7 +24,7 @@ int srv_connect(const char *server, unsigned int port, int ssl);
 int srv_close(int sock, int ssl);
 char *srv_login(int sock, const char *server, const char *user,
 		const char *pass, const char *resource, int ssl);
-int srv_setpresence(int sock, const char *type, int ssl);
+int srv_setpresence(int sock, const char *type, const char *msg, int ssl);
 char *srv_getroster(int sock, int ssl);
 int srv_sendtext(int sock, const char *to, const char *text,
 		 const char *from, int ssl);

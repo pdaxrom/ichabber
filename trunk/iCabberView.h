@@ -69,6 +69,7 @@
 - (Buddy *)getBuddy:(NSString *) jid;
 - (Buddy *)getOfflineBuddy:(NSString *) jid;
 - (void)updateUsersTable;
+- (void)setStatus:(NSString *) status withText:(NSString *) message;
 
 - (void)updateAfterResume;
 
