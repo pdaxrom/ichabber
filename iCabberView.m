@@ -107,7 +107,7 @@ int buddy_compare_status(id left, id right, void * context)
     }
 
     - (int)disconnectFromServer {
-	srv_setpresence(sock, "unavailable", [myPrefs useSSL]);
+	srv_setpresence(sock, "", "unavailable", [myPrefs useSSL]);
 
 	srv_close(sock, [myPrefs useSSL]);
 
@@ -181,7 +181,7 @@ int buddy_compare_status(id left, id right, void * context)
 	
 	[self updateUsersTable];
 
-	srv_setpresence(sock, "Online!", [myPrefs useSSL]);
+	srv_setpresence(sock, "", "Online!", [myPrefs useSSL]);
 
 	return 0;
     }
@@ -222,11 +222,21 @@ int buddy_compare_status(id left, id right, void * context)
 	NSFileHandle *inFile = [NSFileHandle fileHandleForReadingAtPath:name];
 
 	if (inFile != nil) {
+#if 1
 	    NSData *fileData = [inFile readDataToEndOfFile];
 	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
 
+	    if ([tmp length] > MAX_USERLOG_SIZE) {
+		NSString *tmp1 = [tmp substringFromIndex: [tmp length] - MAX_USERLOG_SIZE];
+		NSRange r = [tmp1 rangeOfString:@"<br/><table>"];
+		if (r.location != NSNotFound)
+		    tmp = [tmp1 substringFromIndex:r.location];
+		else
+		    tmp = @"";
+	    }
+
 	    [userView setText: [[IconSet sharedInstance] insertSmiles: tmp]];
-#if 0
+#else
 	    const char *data, *ptr;
 	    
 	    unsigned long long fsize = [inFile seekToEndOfFile];
@@ -242,9 +252,9 @@ int buddy_compare_status(id left, id right, void * context)
 	    ptr = strcasestr(data, "<br/><table>");
 	    
 	    if (ptr) {
-		NSString *tmp = [[NSString alloc] initWithData:[[NSData alloc] initWithBytesNoCopy:(void *)ptr length:([fileData length] - (ptr - data))] encoding:NSUTF8StringEncoding];
+		NSString *tmp = [[NSString alloc] initWithData:[[NSData alloc] initWithBytesNoCopy:(void *)ptr length: strlen(ptr)] encoding:NSUTF8StringEncoding];
 
-		[userView setText: tmp];
+		[userView setText: [[IconSet sharedInstance] insertSmiles: tmp]];
 	    }
 #endif
 	    [inFile closeFile];
@@ -667,6 +677,11 @@ int buddy_compare_status(id left, id right, void * context)
 	return connected;
     }
 
+    -(void)setStatus:(NSString *) status withText:(NSString *) message {
+	if ([self isConnected])
+	    srv_setpresence(sock, [status UTF8String], [message UTF8String], [myPrefs useSSL]);
+    }
+
     - (id)initWithFrame:(CGRect) rect
     {
 	if ((self == [super initWithFrame: rect]) == nil)
@@ -694,11 +709,11 @@ int buddy_compare_status(id left, id right, void * context)
 	
 	connected = 0;
 
-	ping_interval = 80 * 4;
+	ping_interval = 80 * 5;
 	ping_counter = ping_interval;
 	ping_errors = 0;
 
-	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 4.f) target:self 
+	myTimer = [NSTimer scheduledTimerWithTimeInterval:(1.f / 5.f) target:self 
     		    selector:@selector(timer:) userInfo:nil repeats:YES];	
 
 	/*
