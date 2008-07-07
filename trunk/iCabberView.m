@@ -304,34 +304,44 @@ int buddy_compare_status(id left, id right, void * context)
 	}	
     }
 
-    - (void)loginMyAccount {
+    - (void)loginMyAccount2 {
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	//NSLogX(@">>%s %s\n", [[myPrefs getUsername] UTF8String], [[myPrefs getPassword] UTF8String]);
 	if (![self connectToServer]) {
+	    [eyeCandy hideProgressHUD];
+	    [eyeCandy showProgressHUD:@"Authorization..." withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
 	    if (![self loginToServer]) {
 		[self updateBuddies];
 	    } else {
+//		[eyeCandy hideProgressHUD];
 		NSLogX(@"Can't login to server");
 		/* handle login error here */
-		    [eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
-			closeBtnTitle:@"Ok" 
-			withError:NSLocalizedString(@"Unable to login. Check your username and password.", @"Login problem")
-		    ];
+		connection_error = 2;
+		[pool release];
 		return;
 	    }
 	} else {
+//	    [eyeCandy hideProgressHUD];
 	    NSLogX(@"Can't connect to server");
 	    /* handle connection error here */
-	    	[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
-		    closeBtnTitle:@"Ok" 
-		    withError:NSLocalizedString(@"Unable to connect to remote server. Check your network settings and try again.", @"Connection problem")
-		];
+	    connection_error = 1;
+	    [pool release];
 	    return;
 	}
-	[transitionView transition: 1 fromView: myPrefs toView: usersView];
-	currPage = usersView;
-        NSLogX(@"0-1");
+//	[eyeCandy hideProgressHUD];
 	ping_counter = ping_interval;
 	connected = 1;
+	[pool release];
+    }
+
+    - (void)loginMyAccount {
+	[eyeCandy showProgressHUD:@"Connecting..." withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
+	connection_hud = 1;
+	connection_error = 0;
+	
+	[NSThread detachNewThreadSelector:@selector(loginMyAccount2) toTarget:self withObject:nil];
+
+//	[self loginMyAccount2];
     }
     
     - (void)logoffMyAccount {
@@ -540,9 +550,36 @@ int buddy_compare_status(id left, id right, void * context)
 
     -(void)timer:(NSTimer *)aTimer
     {
+	if (connection_error) {
+	    [eyeCandy hideProgressHUD];
+	    switch (connection_error) {
+	    case 1:
+	    	[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
+		    closeBtnTitle:@"Ok" 
+		    withError:NSLocalizedString(@"Unable to connect to remote server. Check your network settings and try again.", @"Connection problem")
+		];
+		break;
+	    case 2:
+		[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
+			closeBtnTitle:@"Ok" 
+			withError:NSLocalizedString(@"Unable to login. Check your username and password.", @"Login problem")
+		];
+		break;
+	    }
+	    connection_error = 0;
+	}
+
 	if (!connected)
 	    return;
 
+	if (connection_hud) {
+	    [eyeCandy hideProgressHUD];
+	    [transitionView transition: 1 fromView: myPrefs toView: usersView];
+	    currPage = usersView;
+    	    NSLogX(@"0-1");
+	    connection_hud = 0;
+	}
+	
 	int x = check_io(sock, [myPrefs useSSL]);
 	
 	//NSLogX(@"IO %d\n", x);
@@ -694,7 +731,6 @@ int buddy_compare_status(id left, id right, void * context)
 	eyeCandy = [[[EyeCandy alloc] init] retain];
 
         transitionView = [[UITransitionView alloc] initWithFrame: rect];
-        
 	[self addSubview: transitionView];
 	
 	myPrefs   = [[MyPrefs alloc] initPrefs];
