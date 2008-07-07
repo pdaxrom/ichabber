@@ -50,6 +50,8 @@
     int ping_errors;
     
     int connected;
+    int connection_error;
+    int connection_hud;
 }
 
 - (id)initWithFrame:(CGRect) rect;
@@ -57,6 +59,7 @@
 - (int)isConnected;
 
 - (void)loginMyAccount;
+- (void)loginMyAccount2;
 - (void)logoffMyAccount;
 
 - (void)sendMessage:(NSString *) msg;

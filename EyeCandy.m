@@ -48,11 +48,11 @@
 	[sheet dismissAnimated: TRUE];
 }
 
-- (void)showProgressHUD:(NSString *)label withWindow:(UIWindow *)w withView:(UIView *)v withRect:(struct CGRect)rect
+- (void)showProgressHUD:(NSString *)label withView:(UIView *)v withRect:(struct CGRect)rect
 {
-	progress = [[UIProgressHUD alloc] initWithWindow: w];
+	progress = [[UIProgressHUD alloc] initWithFrame: rect];
 	[progress setText: label];
-	[progress drawRect: rect];
+	//[progress drawRect: rect];
 	[progress show: YES];
 	
 	[v addSubview:progress];
