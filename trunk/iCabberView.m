@@ -225,17 +225,22 @@ int buddy_compare_status(id left, id right, void * context)
 #if 1
 	    NSData *fileData = [inFile readDataToEndOfFile];
 	    NSString *tmp = [[NSString alloc] initWithData:fileData encoding:NSUTF8StringEncoding];
+	    [fileData release];
 
 	    if ([tmp length] > MAX_USERLOG_SIZE) {
-		NSString *tmp1 = [tmp substringFromIndex: [tmp length] - MAX_USERLOG_SIZE];
+		NSString *tmp1 = [[NSString alloc] initWithString: [tmp substringFromIndex: [tmp length] - MAX_USERLOG_SIZE]];
 		NSRange r = [tmp1 rangeOfString:@"<br/><table>"];
+		[tmp release];
 		if (r.location != NSNotFound)
-		    tmp = [tmp1 substringFromIndex:r.location];
+		    tmp = [[NSString alloc] initWithString: [tmp1 substringFromIndex:r.location]];
 		else
-		    tmp = @"";
+		    tmp = [[NSString alloc] initWithString: @""];
+		[tmp1 release];
 	    }
 
-	    [userView setText: [[IconSet sharedInstance] insertSmiles: tmp]];
+	    NSString *tmp1 = [[IconSet sharedInstance] insertSmiles: tmp];
+	    [userView setText: tmp1];
+	    //[tmp1 release];
 #else
 	    const char *data, *ptr;
 	    
@@ -309,7 +314,7 @@ int buddy_compare_status(id left, id right, void * context)
 	//NSLogX(@">>%s %s\n", [[myPrefs getUsername] UTF8String], [[myPrefs getPassword] UTF8String]);
 	if (![self connectToServer]) {
 	    [eyeCandy hideProgressHUD];
-	    [eyeCandy showProgressHUD:@"Authorization..." withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
+	    [eyeCandy showProgressHUD:NSLocalizedString(@"Authorization...", @"Authorization...") withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
 	    if (![self loginToServer]) {
 		[self updateBuddies];
 	    } else {
@@ -335,18 +340,17 @@ int buddy_compare_status(id left, id right, void * context)
     }
 
     - (void)loginMyAccount {
-	[eyeCandy showProgressHUD:@"Connecting..." withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
+	[eyeCandy showProgressHUD:NSLocalizedString(@"Connecting...", @"Connecting...") withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
 	connection_hud = 1;
 	connection_error = 0;
 	
 	[NSThread detachNewThreadSelector:@selector(loginMyAccount2) toTarget:self withObject:nil];
-
-//	[self loginMyAccount2];
     }
     
     - (void)logoffMyAccount {
 	connected = 0;
 	[self disconnectFromServer];
+	[buddyArray removeAllObjects];
 	[transitionView transition: 2 fromView: usersView toView: myPrefs];
 	currPage = myPrefs;
 	NSLogX(@"1-0");
