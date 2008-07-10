@@ -55,6 +55,7 @@
 	[name_label release];
 	[status_image release];
 	[proto_image release];
+	[status_label release];
 	[super dealloc];
     }
 

@@ -20,6 +20,7 @@
 	[jid release];
 	[name release];
 	[group release];
+	[statusText release];
 	[super dealloc];
     }
 
