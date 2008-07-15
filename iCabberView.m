@@ -340,6 +340,9 @@ int buddy_compare_status(id left, id right, void * context)
     }
 
     - (void)loginMyAccount {
+	if (connection_started)
+	    return;
+	connection_started = 1;
 	[eyeCandy showProgressHUD:NSLocalizedString(@"Connecting...", @"Connecting...") withView:self withRect:CGRectMake(0, 140, 320, 480 - 280)];
 	connection_hud = 1;
 	connection_error = 0;
@@ -349,6 +352,7 @@ int buddy_compare_status(id left, id right, void * context)
     
     - (void)logoffMyAccount {
 	connected = 0;
+	connection_started = 0;
 	[self disconnectFromServer];
 	[buddyArray removeAllObjects];
 	[transitionView transition: 2 fromView: usersView toView: myPrefs];
@@ -556,6 +560,7 @@ int buddy_compare_status(id left, id right, void * context)
     {
 	if (connection_error) {
 	    [eyeCandy hideProgressHUD];
+	    connection_started = 0;
 	    switch (connection_error) {
 	    case 1:
 	    	[eyeCandy showStandardAlertWithString:NSLocalizedString(@"Error!", @"Error")
@@ -747,6 +752,7 @@ int buddy_compare_status(id left, id right, void * context)
 	currBuddy = nil;
 	currPage  = myPrefs;
 	
+	connection_started = 0;
 	connected = 0;
 
 	ping_interval = 80 * 5;

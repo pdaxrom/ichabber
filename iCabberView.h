@@ -49,6 +49,7 @@
     int ping_interval;
     int ping_errors;
     
+    int connection_started;
     int connected;
     int connection_error;
     int connection_hud;
